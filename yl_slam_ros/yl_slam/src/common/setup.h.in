@@ -1,0 +1,26 @@
+#pragma once
+
+#define YL_SLAM_DIR "@YL_SLAM_DIR@"
+
+#define YL_SLAM_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define YL_SLAM_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define YL_SLAM_VERSION_PATCH @PROJECT_VERSION_PATCH@
+
+#define YL_LOG_LEVEL @YL_LOG_LEVEL@
+#define SPDLOG_ACTIVE_LEVEL YL_LOG_LEVEL
+
+#define YL_LOG_LEVEL_TRACE 0
+#define YL_LOG_LEVEL_DEBUG 1
+#define YL_LOG_LEVEL_INFO 2
+#define YL_LOG_LEVEL_WARN 3
+#define YL_LOG_LEVEL_ERROR 4
+#define YL_LOG_LEVEL_CRITICAL 5
+#define YL_LOG_LEVEL_OFF 6
+
+namespace YL_SLAM {
+
+using FloatType = @YL_FLOAT_PRECISION@;
+
+} // namespace YL_SLAM
+
+#define YL_FLOAT(x) static_cast<YL_SLAM::FloatType>(x)
