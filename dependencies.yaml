@@ -1,0 +1,13 @@
+repositories:
+    abseil-cpp:
+        type: git
+        url: https://github.com/abseil/abseil-cpp
+        version: 20240116.2
+    ceres-solver:
+        type: git
+        url: https://github.com/ceres-solver/ceres-solver
+        version: 2.2.0
+    Sophus:
+        type: git
+        url: https://github.com/strasdat/Sophus
+        version: 1.22.10
