@@ -1,6 +1,7 @@
 #include "camera/camera_rig.h"
 #include "camera/yaml/camera_rig_yaml_serialization.h"
 #include "common/logger.h"
+#include "common/path_helper.h"
 #include "common/yaml/yaml_serialization.h"
 
 #include <absl/strings/str_cat.h>
@@ -15,28 +16,20 @@ CameraRig::CameraRig(std::string label, const std::vector<CameraGeometryBase::sP
 CameraRig::sPtr CameraRig::loadFromYaml(const std::string &config_file) {
     // 检查并转换路径（如果有需要）
     YL_CHECK(!config_file.empty(), "yaml_file should not be empty!");
-    auto file_name = config_file;
-    if (file_name.front() != '/') { // 相对路径
-        file_name = absl::StrCat(YL_SLAM_DIR, "/", file_name);
-    }
 
     // 根据配置文件加载相机
-    const auto node = YAML::load(file_name);
+    const auto node = YAML::load(path_helper::completePath(config_file));
     return YAML::get<CameraRig::sPtr>(node, "");
 }
 
 void CameraRig::writeToYaml(const std::string &config_file) const {
     // 检查并转换路径（如果有需要）
     YL_CHECK(!config_file.empty(), "config_file should not be empty!");
-    auto file_name = config_file;
-    if (file_name.front() != '/') { // 相对路径
-        file_name = absl::StrCat(YL_SLAM_DIR, "/", file_name);
-    }
 
     // 将相机写入配置文件
     YAML::Node node;
     node = *this;
-    YAML::dump(node, file_name);
+    YAML::dump(node, path_helper::completePath(config_file));
 }
 
 const std::string &CameraRig::label() const {

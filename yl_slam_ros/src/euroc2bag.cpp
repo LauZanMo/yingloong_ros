@@ -1,10 +1,11 @@
 #include "common/logger.h"
+#include "common/path_helper.h"
 #include "common/timer.h"
+#include "common/yaml/yaml_serialization.h"
 
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_split.h>
-#include <common/yaml/yaml_serialization.h>
 #include <fstream>
 #include <opencv2/imgcodecs.hpp>
 
@@ -36,19 +37,14 @@ int main(int argc, char **argv) {
     Logger::initialize(true, log_path, argv[0]);
 
     // 加载配置
-    std::string file_name(argv[1]);
-    if (file_name.front() != '/') { // 相对路径
-        file_name = absl::StrCat(YL_SLAM_DIR, "/", file_name);
-    }
-    const auto config = YAML::load(file_name);
-    auto dataset_path = YAML::get<std::string>(config, "dataset_path");
-    if (dataset_path.front() != '/') { // 相对路径
-        dataset_path = absl::StrCat(YL_SLAM_DIR, "/", dataset_path);
-    }
+    std::string file_name(path_helper::completePath(argv[1]));
+    const auto config        = YAML::load(file_name);
+    auto dataset_path        = YAML::get<std::string>(config, "dataset_path");
+    dataset_path             = path_helper::completePath(dataset_path);
     const auto dataset_names = YAML::get<std::vector<std::string>>(config, "dataset_names");
 
-    // 将Euroc数据集转换为ros2 bag
-    YL_INFO("Converting Euroc dataset to ros2 bag...");
+    // 将euroc数据集转换为ros2 bag
+    YL_INFO("Converting euroc dataset to ros2 bag...");
     for (const auto &name: dataset_names) {
         YL_INFO("Converting dataset: {}", name);
         const auto dataset_folder = absl::StrCat(dataset_path, "/", name);

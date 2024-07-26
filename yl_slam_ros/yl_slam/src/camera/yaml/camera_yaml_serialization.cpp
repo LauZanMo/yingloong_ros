@@ -1,5 +1,6 @@
 #include "camera/yaml/camera_yaml_serialization.h"
 #include "camera/camera_geometry.h"
+#include "common/path_helper.h"
 #include "common/yaml/yaml_eigen_serialization.h"
 
 #include "camera/projection/omni_projection.h"
@@ -61,41 +62,37 @@ bool convert<CameraGeometryBase::sPtr>::decode(const Node &node, CameraGeometryB
 
     // 加载掩模
     cv::Mat mask;
-    const auto raw_mask_file_name = YAML::get<std::string>(node, "mask");
-    auto mask_file_name           = raw_mask_file_name;
-    if (!raw_mask_file_name.empty()) {
-        if (raw_mask_file_name.front() != '/') { // 相对路径
-            mask_file_name = absl::StrCat(YL_SLAM_DIR, "/", raw_mask_file_name);
-        }
-        mask = cv::imread(mask_file_name, cv::IMREAD_GRAYSCALE);
+    const auto mask_file_name = YAML::get<std::string>(node, "mask");
+    if (!mask_file_name.empty()) {
+        mask = cv::imread(path_helper::completePath(mask_file_name), cv::IMREAD_GRAYSCALE);
     }
 
     // 实例化相机
     if (projection_type == "pinhole" && distortion_type == "none") {
         camera = std::make_shared<CameraGeometry<PinholeProjection<NoDistortion>>>(
-                label, width, height, mask, raw_mask_file_name,
+                label, width, height, mask, mask_file_name,
                 PinholeProjection<NoDistortion>(projection_params, NoDistortion()));
     } else if (projection_type == "pinhole" && distortion_type == "radial-tangential") {
         camera = std::make_shared<CameraGeometry<PinholeProjection<RadialTangentialDistortion>>>(
-                label, width, height, mask, raw_mask_file_name,
+                label, width, height, mask, mask_file_name,
                 PinholeProjection<RadialTangentialDistortion>(projection_params,
                                                               RadialTangentialDistortion(distortion_params)));
     } else if (projection_type == "pinhole" && distortion_type == "equidistant") {
         camera = std::make_shared<CameraGeometry<PinholeProjection<EquidistantDistortion>>>(
-                label, width, height, mask, raw_mask_file_name,
+                label, width, height, mask, mask_file_name,
                 PinholeProjection<EquidistantDistortion>(projection_params, EquidistantDistortion(distortion_params)));
     } else if (projection_type == "omni" && distortion_type == "none") {
         camera = std::make_shared<CameraGeometry<OmniProjection<NoDistortion>>>(
-                label, width, height, mask, raw_mask_file_name,
+                label, width, height, mask, mask_file_name,
                 OmniProjection<NoDistortion>(projection_params, NoDistortion()));
     } else if (projection_type == "omni" && distortion_type == "radial-tangential") {
         camera = std::make_shared<CameraGeometry<OmniProjection<RadialTangentialDistortion>>>(
-                label, width, height, mask, raw_mask_file_name,
+                label, width, height, mask, mask_file_name,
                 OmniProjection<RadialTangentialDistortion>(projection_params,
                                                            RadialTangentialDistortion(distortion_params)));
     } else if (projection_type == "omni" && distortion_type == "equidistant") {
         camera = std::make_shared<CameraGeometry<OmniProjection<EquidistantDistortion>>>(
-                label, width, height, mask, raw_mask_file_name,
+                label, width, height, mask, mask_file_name,
                 OmniProjection<EquidistantDistortion>(projection_params, EquidistantDistortion(distortion_params)));
     } else {
         YL_FATAL("Unsupported combination of projection and distortion types: {} and {}!", projection_type,

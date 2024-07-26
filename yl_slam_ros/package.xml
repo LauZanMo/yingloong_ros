@@ -39,6 +39,10 @@
     <depend>atlas</depend>
     <depend>suitesparse</depend>
 
+    <!-- 其他依赖 -->
+    <depend>absl</depend>
+    <depend>ceres-solver</depend>
+
     <!-- 导出可执行文件 -->
     <export>
         <build_type>ament_cmake</build_type>
