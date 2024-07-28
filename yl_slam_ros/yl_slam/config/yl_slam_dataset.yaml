@@ -1,0 +1,15 @@
+dataset:
+    # 数据集完整路径（ros2 bag形式，支持相对yl_slam的路径）
+    uri: "/home/ubuntu/dataset/euroc/MH_03_medium/MH_03_medium"
+
+    # 播放倍速（1.0为原速）
+    play_speed: 4.0
+
+    # 是否使用压缩图像
+    use_compressed_image: false
+
+    # 图像帧率
+    image_rate: 20 # Hz
+
+    # 缓冲区窗口时长
+    cache_duration: 5 # s

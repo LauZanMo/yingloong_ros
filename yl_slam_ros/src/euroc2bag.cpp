@@ -28,7 +28,7 @@ void convertGT(const std::unique_ptr<rosbag2_cpp::Writer> &writer, const std::st
 
 int main(int argc, char **argv) {
     // 输入检查
-    if (argc < 2) {
+    if (argc != 2) {
         YL_FATAL("Usage: ros2 run yl_slam_ros euroc2bag <config_file>");
     }
 

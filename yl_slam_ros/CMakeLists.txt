@@ -27,6 +27,13 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
+# yl_slam_dataset_node
+ament_auto_add_executable(yl_slam_dataset_node
+    src/yl_slam_dataset_node.cpp
+)
+target_link_libraries(yl_slam_dataset_node yl_slam)
+target_include_directories(yl_slam_dataset_node PUBLIC ${PROJECT_SOURCE_DIR}/src)
+
 # euroc2bag
 ament_auto_add_executable(euroc2bag
     src/euroc2bag.cpp
