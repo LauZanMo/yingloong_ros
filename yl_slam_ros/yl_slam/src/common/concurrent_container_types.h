@@ -6,11 +6,11 @@
 
 namespace YL_SLAM {
 
-template<typename T>
-using conc_vector = tbb::concurrent_vector<T>;
+template<typename T, typename Allocator = tbb::cache_aligned_allocator<T>>
+using conc_vector = tbb::concurrent_vector<T, Allocator>;
 
-template<typename T>
-using conc_queue = tbb::concurrent_bounded_queue<T>;
+template<typename T, typename Allocator = tbb::cache_aligned_allocator<T>>
+using conc_queue = tbb::concurrent_bounded_queue<T, Allocator>;
 
 template<typename KeyT, typename ValueT>
 using conc_umap = tbb::concurrent_unordered_map<KeyT, ValueT>;

@@ -12,6 +12,7 @@ include(setup)
 file(GLOB_RECURSE YL_SLAM_SRC
     src/common/*.cpp
     src/camera/*.cpp
+    src/system/*.cpp
 )
 add_library(yl_slam SHARED
     ${YL_SLAM_SRC}
