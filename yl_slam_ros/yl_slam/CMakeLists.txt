@@ -18,7 +18,7 @@ add_library(yl_slam SHARED
     ${YL_SLAM_SRC}
 )
 target_include_directories(yl_slam PUBLIC
-    ${PROJECT_SOURCE_DIR}/src
+    src
 )
 
 # 编译示例程序

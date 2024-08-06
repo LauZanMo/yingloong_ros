@@ -1,15 +1,31 @@
 dataset:
     # 数据集完整路径（ros2 bag形式，支持相对yl_slam的路径）
     uri: "/home/ubuntu/dataset/euroc/MH_03_medium/MH_03_medium"
+    play_speed: 4.0 # 播放倍速（1.0为原速）
+    use_compressed_image: false # 是否使用压缩图像
+    image_rate: 20 # 图像帧率（Hz）
+    cache_duration: 5 # 缓冲区窗口时长（s）
 
-    # 播放倍速（1.0为原速）
-    play_speed: 4.0
+drawer:
+    # 话题
+    topic:
+        raw_images:
+            - "/cam0/image_raw"
+            - "/cam1/image_raw"
+        raw_imu: "/imu0/data"
+    # 坐标系id
+    frame_id:
+        cameras:
+            - "cam0"
+            - "cam1"
+        imu: "imu0"
+        map: "map"
+        ground_truth: "gt"
 
-    # 是否使用压缩图像
-    use_compressed_image: false
+camera_rig_file: "config/calibration/euroc_stereo.yaml" # 相机配置文件（支持相对yl_slam的路径）
 
-    # 图像帧率
-    image_rate: 20 # Hz
+estimator:
+    image_align_max_level: 3 # 图像对齐最大金字塔层数
 
-    # 缓冲区窗口时长
-    cache_duration: 5 # s
+map:
+    window_size: 10 # 地图滑窗大小

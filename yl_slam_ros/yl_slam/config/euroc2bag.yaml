@@ -2,4 +2,4 @@
 dataset_path: "/home/ubuntu/dataset/euroc"
 
 # 要转换的数据集文件夹名（转换后的ros2 bag在该文件夹下）
-dataset_names: ["MH_03_medium"]
+dataset_names: [ "MH_03_medium" ]

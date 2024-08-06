@@ -10,7 +10,7 @@ static std::atomic<long> frame_counter{0};
 Frame::Frame(int64_t timestamp, const CameraGeometryBase::sPtr &camera, const SE3f &T_bc, cv::Mat image,
              size_t pyr_levels)
     : timestamp_(timestamp), id_(frame_counter++), camera_(camera), T_bc_(T_bc), raw_image_(std::move(image)) {
-    YL_CHECK(image.rows == camera_->height() && image.cols == camera_->width(),
+    YL_CHECK(raw_image_.rows == camera_->height() && raw_image_.cols == camera_->width(),
              "Image size should match camera geometry!");
 
     // 创建图像金字塔

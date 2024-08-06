@@ -13,7 +13,7 @@
 #define YL_ERROR(...) SPDLOG_ERROR(__VA_ARGS__)
 #define YL_FATAL(...)                                                                                                  \
     SPDLOG_CRITICAL(__VA_ARGS__);                                                                                      \
-    std::exit(1)
+    std::abort()
 #if YL_LOG_LEVEL < YL_LOG_LEVEL_INFO
 #define YL_CHECK(condition, ...)                                                                                       \
     do {                                                                                                               \

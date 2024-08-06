@@ -2,6 +2,7 @@
 
 #include "camera/camera_geometry_base.h"
 #include "common/eigen_types.h"
+#include "common/non_copyable.h"
 
 #include <memory>
 
@@ -11,7 +12,7 @@ namespace YL_SLAM {
  * @brief 相机组类
  * @details 相机组类用于管理多个相机实例及其对应的外参
  */
-class CameraRig {
+class CameraRig : NonCopyable {
 public:
     using sPtr      = std::shared_ptr<CameraRig>;
     using TbcVector = std::vector<SE3f, Eigen::aligned_allocator<SE3f>>;
@@ -29,12 +30,6 @@ public:
      * @brief 析构函数
      */
     ~CameraRig() = default;
-
-    /**
-     * @brief 禁止拷贝构造函数和赋值操作符
-     */
-    CameraRig(const CameraRig &)            = delete;
-    CameraRig &operator=(const CameraRig &) = delete;
 
     /**
      * @brief 从YAML配置文件中加载相机组

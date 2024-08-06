@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
 
     // 初始化Logger
     const auto log_path = absl::StrCat(YL_SLAM_DIR, "/logs/", Timer::currentTime());
-    Logger::initialize(true, log_path, argv[0]);
+    Logger::initialize(true, log_path, path_helper::getFileName(argv[0]));
 
     // 加载配置
     std::string file_name(path_helper::completePath(argv[1]));
@@ -70,8 +70,8 @@ void convertImages(const std::unique_ptr<rosbag2_cpp::Writer> &writer, const std
     cv_bridge::CvImage cv_image;
     cv_image.header.frame_id  = label;
     cv_image.encoding         = "mono8";
-    const auto raw_label      = absl::StrCat(label, "/raw");
-    const auto compress_label = absl::StrCat(label, "/compressed");
+    const auto raw_label      = absl::StrCat(label, "/image_raw");
+    const auto compress_label = absl::StrCat(label, "/image_raw/compressed");
 
     // 读取数据并处理
     auto csv = std::ifstream(absl::StrCat(folder, "/", label, "/data.csv"));
@@ -102,7 +102,8 @@ void convertImu(const std::unique_ptr<rosbag2_cpp::Writer> &writer, const std::s
                 const std::string &label) {
     // 初始化信息
     sensor_msgs::msg::Imu imu;
-    imu.header.frame_id = label;
+    imu.header.frame_id   = label;
+    const auto data_label = absl::StrCat(label, "/data");
 
     // 读取数据并处理
     auto csv = std::ifstream(absl::StrCat(folder, "/", label, "/data.csv"));
@@ -130,7 +131,7 @@ void convertImu(const std::unique_ptr<rosbag2_cpp::Writer> &writer, const std::s
         }
 
         // 写入数据
-        writer->write(imu, label, ros_timestamp);
+        writer->write(imu, data_label, ros_timestamp);
     }
 }
 
