@@ -35,6 +35,12 @@ public:
     void setMapServer(const MapServer::sPtr &server);
 
     /**
+     * @brief 重置绘制器
+     * @note 仅缓冲区会被重置，地图服务器指针不会被重置
+     */
+    void reset();
+
+    /**
      * @brief 更新原始图像束
      * @param timestamp 原始图像束时间戳
      * @param bundle 原始图像束
@@ -87,7 +93,13 @@ private:
      */
     void drawLoop();
 
+    /**
+     * @brief 重置绘制器的内部实现
+     */
+    void internalReset();
+
     std::atomic<bool> running_{false};
+    std::atomic<bool> reset_{false};
     std::unique_ptr<std::thread> draw_thread_;
 
     conc_queue<draw_task_t> draw_task_buffer_;

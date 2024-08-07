@@ -32,6 +32,7 @@ Estimator::~Estimator() {
         YL_INFO("Closing estimator...");
 
         // 结束估计线程
+        spin_rwlock_t lock(reset_mutex_, true);
         running_ = false;
         frame_bundle_buffer_.push(nullptr);
         imu_buffer_.push(Imu());
@@ -60,6 +61,7 @@ void Estimator::addImageBundle(int64_t timestamp, const std::vector<cv::Mat> &im
     if (!reset_) {
         spin_rwlock_t lock(reset_mutex_, false);
         frame_bundle_buffer_.push(std::make_shared<FrameBundle>(frames));
+        drawer_->updateRawImageBundle(timestamp, images);
     }
 
     YL_STOP_TIMER(pyr_timer_);
@@ -70,6 +72,7 @@ void Estimator::addImu(const Imu &imu) {
     if (!reset_) {
         spin_rwlock_t lock(reset_mutex_, false);
         imu_buffer_.push(imu);
+        drawer_->updateRawImu(imu.timestamp, imu);
     }
 }
 
@@ -100,6 +103,9 @@ void Estimator::estimateLoop() {
 
 void Estimator::internalReset() {
     spin_rwlock_t lock(reset_mutex_, true);
+
+    // 重置系统
+    drawer_->reset();
 
     // 清空缓冲区
     frame_bundle_buffer_.clear();
