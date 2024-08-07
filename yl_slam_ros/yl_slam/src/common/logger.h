@@ -3,16 +3,17 @@
 #include "common/setup.h"
 
 #include <Eigen/Core>
+#include <spdlog/async_logger.h>
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/spdlog.h>
 
-#define YL_TRACE(...) SPDLOG_TRACE(__VA_ARGS__)
-#define YL_DEBUG(...) SPDLOG_DEBUG(__VA_ARGS__)
-#define YL_INFO(...) SPDLOG_INFO(__VA_ARGS__)
-#define YL_WARN(...) SPDLOG_WARN(__VA_ARGS__)
-#define YL_ERROR(...) SPDLOG_ERROR(__VA_ARGS__)
+#define YL_TRACE(...) SPDLOG_LOGGER_TRACE(YL_SLAM::Logger::async_logger, __VA_ARGS__)
+#define YL_DEBUG(...) SPDLOG_LOGGER_DEBUG(YL_SLAM::Logger::async_logger, __VA_ARGS__)
+#define YL_INFO(...) SPDLOG_LOGGER_INFO(YL_SLAM::Logger::async_logger, __VA_ARGS__)
+#define YL_WARN(...) SPDLOG_LOGGER_WARN(YL_SLAM::Logger::async_logger, __VA_ARGS__)
+#define YL_ERROR(...) SPDLOG_LOGGER_ERROR(YL_SLAM::Logger::async_logger, __VA_ARGS__)
 #define YL_FATAL(...)                                                                                                  \
-    SPDLOG_CRITICAL(__VA_ARGS__);                                                                                      \
+    SPDLOG_LOGGER_CRITICAL(YL_SLAM::Logger::sync_logger, __VA_ARGS__);                                                 \
     std::abort()
 #if YL_LOG_LEVEL < YL_LOG_LEVEL_INFO
 #define YL_CHECK(condition, ...)                                                                                       \
@@ -62,6 +63,13 @@ public:
      * @note 请使用YL_MATRIX_FMT宏输出矩阵
      */
     static const Eigen::IOFormat matrix_fmt;
+
+    /**
+     * @brief 需要使用的logger
+     * @details critical信息使用同步logger，其余使用异步logger
+     */
+    static std::shared_ptr<spdlog::async_logger> async_logger;
+    static std::shared_ptr<spdlog::logger> sync_logger;
 };
 
 } // namespace YL_SLAM
