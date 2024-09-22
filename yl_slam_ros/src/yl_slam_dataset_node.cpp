@@ -15,8 +15,7 @@
 
 #include <cv_bridge/cv_bridge.h>
 #include <rclcpp/serialization.hpp>
-#include <rosbag2_storage/serialized_bag_message.hpp>
-#include <rosbag2_transport/reader_writer_factory.hpp>
+#include <rosbag2_cpp/reader.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/imu.hpp>
@@ -35,10 +34,9 @@ public:
      */
     explicit DatasetReader(const YAML::Node &config, Estimator::uPtr estimator) : estimator_(std::move(estimator)) {
         // 打开数据集
-        rosbag2_storage::StorageOptions storage_options;
-        storage_options.uri = YAML::get<std::string>(config, "uri");
-        reader_             = rosbag2_transport::ReaderWriterFactory::make_reader(storage_options);
-        reader_->open(storage_options);
+        const auto uri = YAML::get<std::string>(config, "uri");
+        reader_        = std::make_unique<rosbag2_cpp::Reader>();
+        reader_->open(uri);
 
         // 读取配置
         play_speed_           = YAML::get<double>(config, "play_speed");
@@ -60,7 +58,7 @@ public:
         YL_CHECK(!stamped_image_buffers_.empty(), "Image topics should not be empty!");
 
         // 启动图像同步线程
-        YL_INFO("Start reading dataset {}...", storage_options.uri);
+        YL_INFO("Start reading dataset {}...", uri);
         running_     = true;
         sync_thread_ = std::make_unique<std::thread>(&DatasetReader::syncLoop, this);
     }
@@ -156,7 +154,9 @@ private:
             for (size_t i = 0; i < stamped_image_buffers_.size(); ++i) {
                 if (!match_flag[i]) {
                     // 读取缓冲直至数据时间戳大于等于当前时间戳
-                    while (stamped_image_buffers_[i].pop(stamped_image)) {
+                    while (true) {
+                        stamped_image_buffers_[i].pop(stamped_image);
+
                         if (!running_)
                             return;
 
