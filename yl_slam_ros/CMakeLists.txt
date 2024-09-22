@@ -27,19 +27,26 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
+# 通用ros实现代码
+file(GLOB_RECURSE IMPL_SRC
+    src/impl/*.cpp
+)
+
 # yl_slam_dataset_node
 ament_auto_add_executable(yl_slam_dataset_node
     src/yl_slam_dataset_node.cpp
+    ${IMPL_SRC}
 )
 target_link_libraries(yl_slam_dataset_node yl_slam)
-target_include_directories(yl_slam_dataset_node PUBLIC ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(yl_slam_dataset_node PUBLIC src)
 
 # euroc2bag
 ament_auto_add_executable(euroc2bag
     src/euroc2bag.cpp
+    ${IMPL_SRC}
 )
 target_link_libraries(euroc2bag yl_slam)
-target_include_directories(euroc2bag PUBLIC ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(euroc2bag PUBLIC src)
 
 # 生成功能包
 # install(DIRECTORY launch DESTINATION share/${PROJECT_NAME}/launch/)

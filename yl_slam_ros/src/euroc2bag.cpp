@@ -7,6 +7,7 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_split.h>
 #include <fstream>
+#include <iostream>
 #include <opencv2/imgcodecs.hpp>
 
 #include <cv_bridge/cv_bridge.h>
@@ -29,7 +30,8 @@ void convertGT(const std::unique_ptr<rosbag2_cpp::Writer> &writer, const std::st
 int main(int argc, char **argv) {
     // 输入检查
     if (argc != 2) {
-        YL_FATAL("Usage: ros2 run yl_slam_ros euroc2bag <config_file>");
+        std::cout << "Usage: ros2 run yl_slam_ros euroc2bag <config_file>" << std::endl;
+        return -1;
     }
 
     // 初始化Logger

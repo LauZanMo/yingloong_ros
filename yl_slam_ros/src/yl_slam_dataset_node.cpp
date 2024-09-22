@@ -252,7 +252,8 @@ private:
 int main(int argc, char **argv) {
     // 输入检查
     if (argc != 2) {
-        YL_FATAL("Usage: ros2 run yl_slam_ros yl_slam_dataset_node <config_file>");
+        std::cout << "Usage: ros2 run yl_slam_ros yl_slam_dataset_node <config_file>" << std::endl;
+        return -1;
     }
 
     // 初始化Logger
