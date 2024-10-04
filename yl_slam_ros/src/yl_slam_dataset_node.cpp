@@ -5,20 +5,19 @@
 #include "common/timer.h"
 #include "common/yaml/yaml_serialization.h"
 #include "impl/drawer_rviz.h"
+#include "lidar/lidar_helper.h"
 #include "system/estimator.h"
 
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_cat.h>
-#include <opencv2/core.hpp>
 #include <regex>
 #include <thread>
 
-#include <cv_bridge/cv_bridge.h>
+#include <pcl_conversions/pcl_conversions.h>
 #include <rclcpp/serialization.hpp>
 #include <rosbag2_cpp/reader.hpp>
-#include <sensor_msgs/msg/compressed_image.hpp>
-#include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/point_cloud2.h>
 
 using namespace YL_SLAM;
 
@@ -39,25 +38,24 @@ public:
         reader_->open(uri);
 
         // 读取配置
-        play_speed_           = YAML::get<double>(config, "play_speed");
-        use_compressed_image_ = YAML::get<bool>(config, "use_compressed_image");
-        image_regex_          = use_compressed_image_ ? std::regex("[/_[:alnum:]]*cam([0-9]+)/image_raw/compressed$")
-                                                      : std::regex("[/_[:alnum:]]*cam([0-9]+)/image_raw$");
-        imu_regex_            = std::regex("[/_[:alnum:]]*imu([0-9]+)/data$");
+        play_speed_        = YAML::get<double>(config, "play_speed");
+        point_cloud_regex_ = std::regex("[/_[:alnum:]]*lidar([0-9]+)/point_cloud_raw");
+        imu_regex_         = std::regex("[/_[:alnum:]]*imu([0-9]+)/data$");
 
         // 初始化缓冲区
-        const auto image_rate     = YAML::get<long>(config, "image_rate");
-        const auto cache_duration = YAML::get<long>(config, "cache_duration");
-        const auto topics         = reader_->get_all_topics_and_types();
+        const auto slam_sensor_rate = YAML::get<long>(config, "slam_sensor_rate");
+        const auto cache_duration   = YAML::get<long>(config, "cache_duration");
+        const auto topics           = reader_->get_all_topics_and_types();
         for (const auto &topic: topics) {
-            if (std::regex_match(topic.name, image_regex_)) {
-                stamped_image_buffers_.emplace_back();
-                stamped_image_buffers_.back().set_capacity(image_rate * cache_duration);
+            if (std::regex_match(topic.name, point_cloud_regex_)) {
+                point_cloud_buffers_.emplace_back();
+                point_cloud_buffers_.back().set_capacity(slam_sensor_rate * cache_duration);
             }
         }
-        YL_CHECK(!stamped_image_buffers_.empty(), "Image topics should not be empty!");
+        YL_CHECK(!point_cloud_buffers_.empty(), "Point cloud topics should not be empty!");
+        lidar_types_.resize(point_cloud_buffers_.size());
 
-        // 启动图像同步线程
+        // 启动点云同步线程
         YL_INFO("Start reading dataset {}...", uri);
         running_     = true;
         sync_thread_ = std::make_unique<std::thread>(&DatasetReader::syncLoop, this);
@@ -68,14 +66,14 @@ public:
      */
     ~DatasetReader() {
         // 等待缓存清空
-        while (!stamped_image_buffers_[0].empty()) {
+        while (!point_cloud_buffers_[0].empty()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
 
         // 结束同步线程
         running_ = false;
-        for (auto &stamped_image_buffer: stamped_image_buffers_) {
-            stamped_image_buffer.emplace(-1, cv::Mat());
+        for (auto &buffer: point_cloud_buffers_) {
+            buffer.emplace(nullptr);
         }
         sync_thread_->join();
 
@@ -85,7 +83,7 @@ public:
     /**
      * @brief 读取循环
      * @details 该函数会不断从数据集中读取数据包，对数据包进行对应解码，直到数据集末尾，其中：<br/>
-     *          1. 图像会加入到缓冲区中，通过同步线程进行同步后，在进行使用<br/>
+     *          1. 点云会加入到缓冲区中，通过同步线程进行同步后，在进行使用<br/>
      *          2. IMU数据会直接使用
      */
     void readLoop() {
@@ -98,12 +96,12 @@ public:
 
             // 根据话题名进行对应解码
             std::smatch sub_match;
-            if (std::regex_match(msg->topic_name, sub_match, image_regex_)) {
+            if (std::regex_match(msg->topic_name, sub_match, point_cloud_regex_)) {
                 size_t idx;
                 if (absl::SimpleAtoi(sub_match[1].str(), &idx)) {
-                    pushImageMsg(idx, msg);
+                    pushPointCloudMsg(idx, msg);
                 } else {
-                    YL_ERROR("Invalid image index: {}", sub_match[1].str());
+                    YL_ERROR("Invalid point cloud index: {}", sub_match[1].str());
                 }
             } else if (std::regex_match(msg->topic_name, sub_match, imu_regex_)) {
                 size_t idx;
@@ -135,27 +133,26 @@ public:
     }
 
 private:
-    using StampedImage = std::pair<int64_t, cv::Mat>;
-
     /**
      * @brief 同步循环
-     * @details 该函数会不断从多个图像缓冲区中读取图像，对不同缓冲区的图像进行同步，再进行使用，直到系统结束
+     * @details 该函数会不断从多个点云缓冲区中读取点云，对不同缓冲区的点云进行同步，再进行使用，直到系统结束
      */
     void syncLoop() {
         int64_t ref_timestamp{-1};
-        std::vector<cv::Mat> image_bundle(stamped_image_buffers_.size());
+        std::vector<RawLidarPointCloud::Ptr> point_cloud_bundle(point_cloud_buffers_.size());
         std::bitset<16> match_flag;
-        StampedImage stamped_image;
-        auto &[timestamp, image] = stamped_image;
+        RawLidarPointCloud::Ptr point_cloud;
+        int64_t timestamp;
 
-        // 若系统运行则持续同步图像
+        // 若系统运行则持续同步点云
         while (running_) {
             match_flag.reset();
-            for (size_t i = 0; i < stamped_image_buffers_.size(); ++i) {
+            for (size_t i = 0; i < point_cloud_buffers_.size(); ++i) {
                 if (!match_flag[i]) {
                     // 读取缓冲直至数据时间戳大于等于当前时间戳
                     while (true) {
-                        stamped_image_buffers_[i].pop(stamped_image);
+                        point_cloud_buffers_[i].pop(point_cloud);
+                        timestamp = static_cast<int64_t>(point_cloud->header.stamp);
 
                         if (!running_)
                             return;
@@ -165,18 +162,18 @@ private:
                         }
                     }
 
-                    // 若为当前图像束第一个匹配上时间戳的图像，则不做检查，否则需要检查时间戳是否匹配
+                    // 若为当前点云束第一个匹配上时间戳的点云，则不做检查，否则需要检查时间戳是否匹配
                     if (match_flag.none()) {
-                        image_bundle[i] = image;
+                        point_cloud_bundle[i] = point_cloud;
                         match_flag.set(i);
                         ref_timestamp = timestamp;
                     } else {
-                        image_bundle[i] = image;
+                        point_cloud_bundle[i] = point_cloud;
                         match_flag.set(i);
 
                         // 检测到时间戳不匹配，则重置标志位，重新进行匹配
                         if (timestamp > ref_timestamp) {
-                            YL_WARN("Image [{}] time jump found at {}", i, ref_timestamp);
+                            YL_WARN("Point cloud [{}] time jump found at {}", i, ref_timestamp);
                             match_flag.reset();
                             match_flag.set(i);
                             ref_timestamp = timestamp;
@@ -186,29 +183,49 @@ private:
                 }
             }
 
-            YL_INFO("Consume image bundle, timestamp: {}", ref_timestamp);
-            estimator_->addImageBundle(ref_timestamp, image_bundle);
+            YL_INFO("Consume point cloud bundle, timestamp: {}ns", ref_timestamp);
+            estimator_->addPointCloudBundle(ref_timestamp, point_cloud_bundle);
         }
     }
 
     /**
-     * @brief 对图像数据包进行解码，并加入对应索引的图像缓冲区
-     * @param idx 图像缓冲区的索引
-     * @param msg 图像数据包
+     * @brief 对点云数据包进行解码，并加入对应索引的点云缓冲区
+     * @param idx 点云缓冲区的索引
+     * @param msg 点云数据包
      */
-    void pushImageMsg(size_t idx, const rosbag2_storage::SerializedBagMessageSharedPtr &msg) {
-        YL_CHECK(idx < stamped_image_buffers_.size(), "Index should be less than buffers size");
+    void pushPointCloudMsg(size_t idx, const rosbag2_storage::SerializedBagMessageSharedPtr &msg) {
+        YL_CHECK(idx < point_cloud_buffers_.size(), "Index should be less than buffers size");
 
+        // 解码信息
         const rclcpp::SerializedMessage serialized_msg(*msg->serialized_data);
-        if (use_compressed_image_) {
-            const auto ros_msg = std::make_shared<sensor_msgs::msg::CompressedImage>();
-            compressed_image_serial_.deserialize_message(&serialized_msg, ros_msg.get());
-            stamped_image_buffers_[idx].push({msg->time_stamp, cv_bridge::toCvCopy(ros_msg)->image});
-        } else {
-            const auto ros_msg = std::make_shared<sensor_msgs::msg::Image>();
-            image_serial_.deserialize_message(&serialized_msg, ros_msg.get());
-            stamped_image_buffers_[idx].push({msg->time_stamp, cv_bridge::toCvCopy(ros_msg)->image});
+        const auto ros_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
+        point_cloud_serial_.deserialize_message(&serialized_msg, ros_msg.get());
+
+        // 根据点云自动检测激光雷达类型
+        if (lidar_types_[idx].empty()) {
+            lidar_types_[idx] = detectLidarType(*ros_msg);
         }
+
+        // 将信息转换为系统输入类型
+        RawLidarPointCloud::Ptr point_cloud;
+        if (lidar_types_[idx] == "ouster") {
+            const auto os_point_cloud = std::make_shared<OusterLidarPointCloud>();
+            pcl::fromROSMsg(*ros_msg, *os_point_cloud);
+            point_cloud = lidar_helper::convert(*os_point_cloud);
+        } else if (lidar_types_[idx] == "velodyne") {
+            const auto vld_point_cloud = std::make_shared<VelodyneLidarPointCloud>();
+            pcl::fromROSMsg(*ros_msg, *vld_point_cloud);
+            point_cloud = lidar_helper::convert(*vld_point_cloud);
+        } else if (lidar_types_[idx] == "livox") {
+            const auto lv_point_cloud = std::make_shared<LivoxLidarPointCloud>();
+            pcl::fromROSMsg(*ros_msg, *lv_point_cloud);
+            point_cloud = lidar_helper::convert(*lv_point_cloud);
+        } else {
+            return;
+        }
+
+        // 将点云加入对应缓冲区，等待同步
+        point_cloud_buffers_[idx].push(std::move(point_cloud));
     }
 
     /**
@@ -220,9 +237,12 @@ private:
     void pushImuMsg([[maybe_unused]] size_t idx, const rosbag2_storage::SerializedBagMessageSharedPtr &msg) {
         YL_CHECK(idx == 0, "Index should be 0"); ///< 目前只支持单IMU
 
+        // 解码信息
         const rclcpp::SerializedMessage serialized_msg(*msg->serialized_data);
         const auto ros_msg = std::make_shared<sensor_msgs::msg::Imu>();
         imu_serial_.deserialize_message(&serialized_msg, ros_msg.get());
+
+        // 将信息转换为系统输入类型
         Imu imu;
         imu.timestamp = msg->time_stamp;
         imu.gyr       = {YL_FLOAT(ros_msg->angular_velocity.x), YL_FLOAT(ros_msg->angular_velocity.y),
@@ -230,22 +250,41 @@ private:
         imu.acc       = {YL_FLOAT(ros_msg->linear_acceleration.x), YL_FLOAT(ros_msg->linear_acceleration.y),
                          YL_FLOAT(ros_msg->linear_acceleration.z)};
 
+        // 输入系统
         estimator_->addImu(imu);
+    }
+
+    /**
+     * @brief 根据点云信息检测激光雷达类型
+     * @param msg 点云信息
+     * @return 激光雷达类型
+     */
+    static std::string detectLidarType(const sensor_msgs::msg::PointCloud2 &msg) {
+        for (const auto &field: msg.fields) {
+            if (field.name == "t") {
+                return "ouster";
+            } else if (field.name == "time") {
+                return "velodyne";
+            } else if (field.name == "timestamp") {
+                return "livox";
+            }
+        }
+        YL_ERROR("Can not detect lidar type!");
+        return {};
     }
 
     Estimator::uPtr estimator_;
 
     std::unique_ptr<rosbag2_cpp::Reader> reader_;
-    std::regex image_regex_, imu_regex_;
-    rclcpp::Serialization<sensor_msgs::msg::CompressedImage> compressed_image_serial_;
-    rclcpp::Serialization<sensor_msgs::msg::Image> image_serial_;
+    std::regex point_cloud_regex_, imu_regex_;
+    rclcpp::Serialization<sensor_msgs::msg::PointCloud2> point_cloud_serial_;
     rclcpp::Serialization<sensor_msgs::msg::Imu> imu_serial_;
 
     std::unique_ptr<std::thread> sync_thread_;
     std::atomic<bool> running_{false};
-    std::vector<conc_queue<StampedImage>> stamped_image_buffers_;
+    std::vector<conc_queue<RawLidarPointCloud::Ptr>> point_cloud_buffers_;
+    std::vector<std::string> lidar_types_;
 
-    bool use_compressed_image_;
     double play_speed_;
 };
 
@@ -270,9 +309,9 @@ int main(int argc, char **argv) {
     const auto config = YAML::load(file_name);
 
     { // 创建数据集读取器并进行读取
-        DrawerBase::sPtr drawer = std::make_shared<DrawerRviz>(config["drawer"], node);
-        auto estimator          = std::make_unique<Estimator>(config, drawer);
-        auto dataset_reader     = std::make_unique<DatasetReader>(config["dataset"], std::move(estimator));
+        DrawerBase::sPtr drawer   = std::make_shared<DrawerRviz>(config["drawer"], node);
+        auto estimator            = std::make_unique<Estimator>(config, drawer);
+        const auto dataset_reader = std::make_unique<DatasetReader>(config["dataset"], std::move(estimator));
         dataset_reader->readLoop();
     }
 
