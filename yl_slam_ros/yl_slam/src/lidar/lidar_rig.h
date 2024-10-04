@@ -6,6 +6,10 @@
 
 namespace YL_SLAM {
 
+/**
+ * @brief 激光雷达组类
+ * @details 激光雷达组类用于管理多个激光雷达实例及其对应的外参
+ */
 class LidarRig : NonCopyable {
 public:
     using sPtr      = std::shared_ptr<LidarRig>;

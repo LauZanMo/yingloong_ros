@@ -8,7 +8,7 @@ namespace YL_SLAM {
 
 /**
  * @brief 激光雷达几何类
- * @details 该类为相机的基础类，所有相机都通过YAML配置文件实现动态加载
+ * @details 该类为激光雷达的基础类，所有激光雷达都通过YAML配置文件实现动态加载
  */
 class LidarGeometryBase {
 public:
