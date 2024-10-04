@@ -1,6 +1,8 @@
 #include "impl/drawer_rviz.h"
 #include "common/yaml/yaml_serialization.h"
 
+#include <pcl_conversions/pcl_conversions.h>
+
 namespace YL_SLAM {
 
 /**
@@ -23,13 +25,15 @@ std::string toImageEncoding(int type) {
 
 DrawerRviz::DrawerRviz(const YAML::Node &config, rclcpp::Node &node) {
     // 获取话题参数
-    const auto topic_config     = config["topic"];
-    const auto raw_image_topics = YAML::get<std::vector<std::string>>(topic_config, "raw_images");
-    const auto raw_imu_topic    = YAML::get<std::string>(topic_config, "raw_imu");
+    const auto topic_config           = config["topic"];
+    const auto raw_image_topics       = YAML::get<std::vector<std::string>>(topic_config, "raw_images");
+    const auto raw_point_cloud_topics = YAML::get<std::vector<std::string>>(topic_config, "raw_point_clouds");
+    const auto raw_imu_topic          = YAML::get<std::string>(topic_config, "raw_imu");
 
     // 获取坐标系id参数
     const auto frame_id_config = config["frame_id"];
     camera_frame_ids_          = YAML::get<std::vector<std::string>>(frame_id_config, "cameras");
+    lidar_frame_ids_           = YAML::get<std::vector<std::string>>(frame_id_config, "lidars");
     imu_frame_id_              = YAML::get<std::string>(frame_id_config, "imu");
     map_frame_id_              = YAML::get<std::string>(frame_id_config, "map");
     gt_frame_id_               = YAML::get<std::string>(frame_id_config, "ground_truth");
@@ -37,6 +41,8 @@ DrawerRviz::DrawerRviz(const YAML::Node &config, rclcpp::Node &node) {
     // 执行必要的检查
     YL_CHECK(raw_image_topics.size() == camera_frame_ids_.size(),
              "The size of raw images and cameras should be the same!");
+    YL_CHECK(raw_point_cloud_topics.size() == lidar_frame_ids_.size(),
+             "The size of raw point clouds and lidars should be the same!");
 
     // 设置服务质量（QoS）
     rclcpp::QoS qos(rclcpp::KeepLast(10));
@@ -48,6 +54,9 @@ DrawerRviz::DrawerRviz(const YAML::Node &config, rclcpp::Node &node) {
         raw_image_pubs_.push_back(node.create_publisher<sensor_msgs::msg::Image>(raw_image_topics[i], qos));
         cv_images_.emplace_back();
         cv_images_.back().header.frame_id = camera_frame_ids_[i];
+    }
+    for (const auto &topic: raw_point_cloud_topics) {
+        raw_point_cloud_pubs_.push_back(node.create_publisher<sensor_msgs::msg::PointCloud2>(topic, qos));
     }
     raw_imu_pub_    = node.create_publisher<sensor_msgs::msg::Imu>(raw_imu_topic, qos);
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(node);
@@ -61,6 +70,18 @@ void DrawerRviz::drawRawImageBundle(int64_t timestamp, const std::vector<cv::Mat
         cv_images_[i].encoding     = toImageEncoding(bundle[i].type());
         cv_images_[i].image        = bundle[i];
         raw_image_pubs_[i]->publish(*cv_images_[i].toImageMsg());
+    }
+}
+
+void DrawerRviz::drawRawPointCloudBundle(int64_t timestamp, const std::vector<RawLidarPointCloud::Ptr> &bundle) {
+    YL_CHECK(raw_point_cloud_pubs_.size() == bundle.size(), "Publishers and lidar bundle should have the same size!");
+    rclcpp::Time ros_timestamp(timestamp);
+    for (size_t i = 0; i < bundle.size(); ++i) {
+        sensor_msgs::msg::PointCloud2 msg;
+        pcl::toROSMsg(*bundle[i], msg);
+        msg.header.stamp    = ros_timestamp;
+        msg.header.frame_id = lidar_frame_ids_[i];
+        raw_point_cloud_pubs_[i]->publish(msg);
     }
 }
 

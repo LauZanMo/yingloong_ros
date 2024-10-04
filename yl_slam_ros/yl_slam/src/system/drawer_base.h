@@ -5,6 +5,7 @@
 #include "system/base/map_server.h"
 
 #include <atomic>
+#include <opencv2/core.hpp>
 #include <thread>
 
 namespace YL_SLAM {
@@ -48,6 +49,13 @@ public:
     void updateRawImageBundle(int64_t timestamp, const std::vector<cv::Mat> &bundle);
 
     /**
+     * @brief 更新原始激光雷达点云束
+     * @param timestamp 原始激光雷达点云束时间戳
+     * @param bundle 原始激光雷达点云束
+     */
+    void updateRawPointCloudBundle(int64_t timestamp, const std::vector<std::shared_ptr<RawLidarPointCloud>> &bundle);
+
+    /**
      * @brief 更新原始IMU数据
      * @param timestamp 原始IMU数据时间戳
      * @param imu 原始IMU数据
@@ -68,6 +76,13 @@ protected:
      * @param bundle 原始图像束
      */
     virtual void drawRawImageBundle(int64_t timestamp, const std::vector<cv::Mat> &bundle) = 0;
+
+    /**
+     * @brief 绘制原始激光雷达点云束
+     * @param timestamp 原始激光雷达点云束的时间戳
+     * @param bundle 原始激光雷达点云束
+     */
+    virtual void drawRawPointCloudBundle(int64_t timestamp, const std::vector<RawLidarPointCloud::Ptr> &bundle) = 0;
 
     /**
      * @brief 绘制原始IMU数据

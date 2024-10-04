@@ -28,7 +28,7 @@ const SE3f &FrameBundle::Twb() const {
 void FrameBundle::setTwb(const SE3f &T_wb) {
     T_wb_ = T_wb;
     for (const auto &frame: frames_) {
-        frame->setTwf(T_wb * frame->Tbc());
+        frame->setTwf(T_wb * frame->Tbs());
     }
 }
 

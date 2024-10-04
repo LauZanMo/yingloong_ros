@@ -3,15 +3,9 @@
 
 namespace YL_SLAM {
 
-Map::Map(size_t window_size) : window_size_(window_size) {}
-
 void Map::reset() {
     keyframe_bundles_.clear();
     keyframes_.clear();
-}
-
-bool Map::isFull() const {
-    return keyframe_bundles_.size() >= window_size_;
 }
 
 void Map::addKeyframeBundle(const FrameBundle::sPtr &bundle) {
@@ -49,22 +43,6 @@ FrameBundle::sConstPtr Map::keyframeBundle(size_t idx) const {
 FrameBundle::sPtr &Map::mutableKeyframeBundle(size_t idx) {
     YL_CHECK(idx < keyframe_bundles_.size(), "Index should be less than the number of keyframe bundles!");
     return keyframe_bundles_[idx];
-}
-
-void Map::addTrashPoint(const Point::sConstPtr &point) {
-    YL_CHECK(point != nullptr, "Point should not be nullptr!");
-    trash_points_.push_back(point);
-}
-
-void Map::removeTrashPoints() {
-    for (const auto &point: trash_points_) {
-        const auto frame_id = point->seedFrame()->id();
-        const auto idx      = point->seedIdx();
-        YL_CHECK(keyframes_.find(frame_id) != keyframes_.end(),
-                 "The seed frame of the trash point is not found in map!");
-        keyframes_[frame_id]->removeSeed(idx);
-    }
-    trash_points_.clear();
 }
 
 } // namespace YL_SLAM

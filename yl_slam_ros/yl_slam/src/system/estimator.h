@@ -1,9 +1,9 @@
 #pragma once
 
-#include "camera/camera_rig.h"
 #include "common/concurrent_container_types.h"
 #include "common/sensor/imu.h"
 #include "common/timer.h"
+#include "lidar/lidar_rig.h"
 #include "system/base/map_server.h"
 #include "system/drawer_base.h"
 
@@ -38,9 +38,17 @@ public:
      * @brief 输入图像束
      * @param timestamp 时间戳（ns）
      * @param images 同一时间戳下多相机的图像
-     * @note 需要按照相机组（camera_rig）的顺序输入图像
+     * @note 仅对输入图像做可视化
      */
     void addImageBundle(int64_t timestamp, const std::vector<cv::Mat> &images);
+
+    /**
+     * @brief 输入原始激光雷达点云束
+     * @param timestamp 时间戳（ns）
+     * @param pointclouds 同一时间戳下多激光雷达的原始点云
+     * @note 需要按照激光雷达组（lidar_rig）的顺序输入激光雷达原始点云
+     */
+    void addPointCloudBundle(int64_t timestamp, const std::vector<RawLidarPointCloud::Ptr> &point_clouds);
 
     /**
      * @brief 输入IMU数据
@@ -85,7 +93,7 @@ private:
     bool getImusFromBuffer(int64_t timestamp, Imus &imus);
 
     // 系统
-    CameraRig::sPtr camera_rig_; ///< 相机组
+    LidarRig::sPtr lidar_rig_;   ///< 激光雷达组
     MapServer::sPtr map_server_; ///< 地图服务器
     DrawerBase::sPtr drawer_;    ///< 绘制器
 
@@ -102,10 +110,7 @@ private:
     Imu last_imu_;                                              ///< 上一IMU
 
     // 计时器
-    YL_DECLARE_TIMER(pyr_timer_);
-
-    // 参数
-    size_t image_align_max_level_; ///< 图像对齐的最大金字塔层数
+    YL_DECLARE_TIMER(deskew_timer_);
 };
 
 } // namespace YL_SLAM

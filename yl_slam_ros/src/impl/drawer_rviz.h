@@ -6,6 +6,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 
 namespace YL_SLAM {
@@ -28,6 +29,13 @@ private:
     void drawRawImageBundle(int64_t timestamp, const std::vector<cv::Mat> &bundle) override;
 
     /**
+     * @brief 绘制原始激光雷达点云束
+     * @param timestamp 原始激光雷达点云束的时间戳
+     * @param bundle 原始激光雷达点云束
+     */
+    void drawRawPointCloudBundle(int64_t timestamp, const std::vector<RawLidarPointCloud::Ptr> &bundle) override;
+
+    /**
      * @brief 绘制原始IMU数据
      * @param timestamp 原始IMU数据时间戳
      * @param imu 原始IMU数据
@@ -42,11 +50,13 @@ private:
     void drawRefPose(int64_t timestamp, const SE3f &pose) override;
 
     std::vector<rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr> raw_image_pubs_;
+    std::vector<rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> raw_point_cloud_pubs_;
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr raw_imu_pub_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
     std::vector<cv_bridge::CvImage> cv_images_;
     std::vector<std::string> camera_frame_ids_;
+    std::vector<std::string> lidar_frame_ids_;
     std::string imu_frame_id_;
     std::string map_frame_id_;
     std::string gt_frame_id_;

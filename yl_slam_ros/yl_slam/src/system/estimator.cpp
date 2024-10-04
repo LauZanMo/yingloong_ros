@@ -10,9 +10,9 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::sPtr drawer) : drawer
     YL_INFO("Starting estimator...");
 
     // 读取相机文件路径，并初始化相机组
-    const auto camera_rig_file = YAML::get<std::string>(config, "camera_rig_file");
-    camera_rig_                = CameraRig::loadFromYaml(camera_rig_file);
-    camera_rig_->print(std::cout);
+    const auto lidar_rig_file = YAML::get<std::string>(config, "lidar_rig_file");
+    lidar_rig_                = LidarRig::loadFromYaml(lidar_rig_file);
+    lidar_rig_->print(std::cout);
 
     // 初始化地图服务器
     map_server_ = std::make_shared<MapServer>(config["map"]);
@@ -20,7 +20,6 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::sPtr drawer) : drawer
 
     // 读取估计器配置
     const auto estimator_config = config["estimator"];
-    image_align_max_level_      = YAML::get<size_t>(estimator_config, "image_align_max_level");
 
     // 启动估计线程
     running_         = true;
@@ -46,25 +45,28 @@ void Estimator::reset() {
 }
 
 void Estimator::addImageBundle(int64_t timestamp, const std::vector<cv::Mat> &images) {
-    YL_START_TIMER(pyr_timer_);
+    // 可视化
+    if (!reset_) {
+        spin_rwlock_t lock(reset_mutex_, false);
+        drawer_->updateRawImageBundle(timestamp, images);
+    }
+}
 
+void Estimator::addPointCloudBundle(int64_t timestamp, const std::vector<RawLidarPointCloud::Ptr> &point_clouds) {
     // 生成帧束
-    YL_CHECK(images.size() == camera_rig_->numCameras(), "The number of images should match the number of cameras!");
-    std::vector<Frame::sPtr> frames(images.size());
-    for (size_t i = 0; i < images.size(); ++i) {
-        // TODO: 1. 测试多线程是否会加速 2. timestamp需要减去后端估计的延迟
-        frames[i] = std::make_shared<Frame>(timestamp, camera_rig_->camera(i), camera_rig_->T_bc(i), images[i],
-                                            image_align_max_level_);
+    YL_CHECK(point_clouds.size() == lidar_rig_->numLidars(),
+             "The number of raw point clouds should match the number of lidars!");
+    std::vector<Frame::sPtr> frames(point_clouds.size());
+    for (size_t i = 0; i < point_clouds.size(); ++i) {
+        frames[i] = std::make_shared<Frame>(timestamp, lidar_rig_->lidar(i), lidar_rig_->T_bs(i), point_clouds[i]);
     }
 
     // 将帧束加入缓冲区
     if (!reset_) {
         spin_rwlock_t lock(reset_mutex_, false);
         frame_bundle_buffer_.push(std::make_shared<FrameBundle>(frames));
-        drawer_->updateRawImageBundle(timestamp, images);
+        drawer_->updateRawPointCloudBundle(timestamp, point_clouds);
     }
-
-    YL_STOP_TIMER(pyr_timer_);
 }
 
 void Estimator::addImu(const Imu &imu) {
@@ -89,7 +91,7 @@ void Estimator::estimateLoop() {
             return;
         }
 
-        YL_INFO("Image bundle timestamp: {}ns", cur_frame_bundle_->timestamp());
+        YL_INFO("Frame bundle timestamp: {}ns", cur_frame_bundle_->timestamp());
         YL_INFO("IMU timestamp range: {}ns - {}ns", imus.front().timestamp, imus.back().timestamp);
 
         // 检查是否需要重置，重置后需要同步缓冲区

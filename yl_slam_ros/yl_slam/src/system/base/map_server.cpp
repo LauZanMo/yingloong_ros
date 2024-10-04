@@ -3,9 +3,8 @@
 
 namespace YL_SLAM {
 
-MapServer::MapServer(const YAML::Node &config) {
-    const auto window_size = YAML::get<size_t>(config, "window_size");
-    map_                   = std::make_unique<Map>(window_size);
+MapServer::MapServer([[maybe_unused]] const YAML::Node &config) {
+    map_ = std::make_unique<Map>();
 }
 
 void MapServer::addReadTask(const MapServer::rtask_t &task) {

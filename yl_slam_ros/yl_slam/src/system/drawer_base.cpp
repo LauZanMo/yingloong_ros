@@ -1,4 +1,5 @@
 #include "drawer_base.h"
+#include "common/logger.h"
 
 namespace YL_SLAM {
 
@@ -32,6 +33,14 @@ void DrawerBase::updateRawImageBundle(int64_t timestamp, const std::vector<cv::M
     if (!reset_) {
         draw_task_buffer_.push([this, timestamp, bundle]() {
             drawRawImageBundle(timestamp, bundle);
+        });
+    }
+}
+
+void DrawerBase::updateRawPointCloudBundle(int64_t timestamp, const std::vector<RawLidarPointCloud::Ptr> &bundle) {
+    if (!reset_) {
+        draw_task_buffer_.push([this, timestamp, bundle]() {
+            drawRawPointCloudBundle(timestamp, bundle);
         });
     }
 }
