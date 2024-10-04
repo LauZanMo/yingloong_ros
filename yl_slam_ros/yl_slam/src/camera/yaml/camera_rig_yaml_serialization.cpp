@@ -15,7 +15,7 @@ Node convert<CameraRig>::encode(const CameraRig &camera_rig) {
     for (size_t camera_idx = 0; camera_idx < num_cameras; ++camera_idx) {
         Node camera_node;
         camera_node["camera"] = camera_rig.camera(camera_idx);
-        camera_node["T_bc"]   = camera_rig.T_bc(camera_idx).matrix();
+        camera_node["T_bs"]   = camera_rig.T_bs(camera_idx).matrix();
         cameras_node.push_back(camera_node);
     }
 
@@ -49,27 +49,27 @@ bool convert<CameraRig::sPtr>::decode(const Node &node, CameraRig::sPtr &camera_
 
     // 加载所有相机及其外参
     std::vector<CameraGeometryBase::sPtr> cameras;
-    CameraRig::TbcVector T_bc_vec;
+    CameraRig::TbsVector T_bs_vec;
     for (size_t camera_idx = 0; camera_idx < num_cameras; ++camera_idx) {
         const auto camera_node = cameras_node[camera_idx];
         YL_CHECK(camera_node && camera_node.IsMap(), "Unable to get camera node for camera #{}!", camera_idx);
 
         auto camera   = YAML::get<CameraGeometryBase::sPtr>(camera_node, "camera");
-        auto T_bc_raw = YAML::get<Mat44f>(camera_node, "T_bc");
+        auto T_bs_raw = YAML::get<Mat44f>(camera_node, "T_bs");
         camera->setId(static_cast<int>(camera_idx));
 
         // 此操作是为了防止输入旋转矩阵非正交
-        Quatf q_bc(T_bc_raw.block<3, 3>(0, 0));
-        q_bc.normalize();
-        T_bc_raw.block<3, 3>(0, 0) = q_bc.toRotationMatrix();
-        SE3f T_bc(T_bc_raw);
+        Quatf q_bs(T_bs_raw.block<3, 3>(0, 0));
+        q_bs.normalize();
+        T_bs_raw.block<3, 3>(0, 0) = q_bs.toRotationMatrix();
+        SE3f T_bs(T_bs_raw);
 
         cameras.push_back(std::move(camera));
-        T_bc_vec.push_back(std::move(T_bc));
+        T_bs_vec.push_back(std::move(T_bs));
     }
 
     // 实例化相机组
-    camera_rig = std::make_shared<CameraRig>(label, cameras, T_bc_vec);
+    camera_rig = std::make_shared<CameraRig>(label, cameras, T_bs_vec);
 
     return true;
 }

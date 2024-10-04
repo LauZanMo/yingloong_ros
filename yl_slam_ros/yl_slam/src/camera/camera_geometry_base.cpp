@@ -3,8 +3,6 @@
 #include "common/path_helper.h"
 #include "common/yaml/yaml_serialization.h"
 
-#include <absl/strings/str_cat.h>
-
 namespace YL_SLAM {
 
 CameraGeometryBase::sPtr CameraGeometryBase::loadFromYaml(const std::string &config_file) {

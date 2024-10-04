@@ -20,7 +20,7 @@ namespace YAML {
  *         用法示例：<br/>
  *         1. 读取（反序列化）：auto cam = YAML::get<CameraGeometryBase>(node, "cam0");<br/>
  *         2. 写入（序列化）：node["cam0"] = cam;<br/>
- *         详细实例可查看CameraGeometryBase::loadFromYaml的实现
+ *         详细实例可查看CameraGeometryBase::loadFromYaml/writeToYaml的实现
  */
 template<>
 struct convert<CameraGeometryBase> {
@@ -46,7 +46,7 @@ struct convert<CameraGeometryBase> {
  *          用法示例：<br/>
  *          1. 读取（反序列化）：auto cam = YAML::get<CameraGeometryBase::sPtr>(node, "cam0");<br/>
  *          2. 写入（序列化）：node["cam0"] = cam;<br/>
- *          详细实例可查看CameraGeometryBase::loadFromYaml的实现
+ *          详细实例可查看CameraGeometryBase::loadFromYaml/writeToYaml的实现
  */
 template<>
 struct convert<CameraGeometryBase::sPtr> {

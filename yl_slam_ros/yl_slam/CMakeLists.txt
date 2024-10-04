@@ -12,6 +12,7 @@ include(setup)
 file(GLOB_RECURSE YL_SLAM_SRC
     src/common/*.cpp
     src/camera/*.cpp
+    src/lidar/*.cpp
     src/system/*.cpp
 )
 add_library(yl_slam SHARED
@@ -21,11 +22,6 @@ target_include_directories(yl_slam PUBLIC
     src
 )
 
-# 编译示例程序
-if (YL_BUILD_EXAMPLES)
-    add_subdirectory(examples)
-endif ()
-
 # 链接第三方库
 find_package(absl REQUIRED)
 find_package(spdlog 1.5.0 REQUIRED)
@@ -34,9 +30,13 @@ find_package(Eigen3 REQUIRED)
 find_package(Sophus REQUIRED)
 find_package(TBB REQUIRED)
 find_package(OpenCV 4.2.0 REQUIRED)
-find_package(Ceres 2.2.0 REQUIRED)
+find_package(PCL 1.11.0 REQUIRED)
 
-target_include_directories(yl_slam PUBLIC ${EIGEN3_INCLUDE_DIR})
+target_include_directories(yl_slam PUBLIC
+    ${EIGEN3_INCLUDE_DIR}
+    ${PCL_INCLUDE_DIRS}
+)
+target_link_directories(yl_slam PUBLIC ${PCL_LIBRARY_DIRS})
 target_link_libraries(yl_slam
     absl::strings
     absl::str_format
@@ -46,5 +46,5 @@ target_link_libraries(yl_slam
     Sophus::Sophus
     TBB::tbb
     ${OpenCV_LIBS}
-    ${CERES_LIBRARIES}
+    ${PCL_LIBRARIES}
 )

@@ -4,7 +4,7 @@ namespace YL_SLAM {
 
 template<typename DerivedKeypoint>
 bool CameraGeometryBase::isKeypointVisible(const Eigen::MatrixBase<DerivedKeypoint> &keypoint) const {
-    EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(DerivedKeypoint, 2, 1);
+    EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(DerivedKeypoint, 2, 1)
     typedef typename DerivedKeypoint::Scalar Scalar;
     const auto ret = keypoint[0] >= static_cast<Scalar>(0.0) && keypoint[1] >= static_cast<Scalar>(0.0) &&
                      keypoint[0] < static_cast<Scalar>(width()) && keypoint[1] < static_cast<Scalar>(height());
@@ -16,7 +16,7 @@ bool CameraGeometryBase::isKeypointVisible(const Eigen::MatrixBase<DerivedKeypoi
 template<typename DerivedKeypoint>
 bool CameraGeometryBase::isKeypointVisible(const Eigen::MatrixBase<DerivedKeypoint> &keypoint,
                                            typename DerivedKeypoint::Scalar border) const {
-    EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(DerivedKeypoint, 2, 1);
+    EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(DerivedKeypoint, 2, 1)
     typedef typename DerivedKeypoint::Scalar Scalar;
     YL_CHECK(2 * border < static_cast<Scalar>(width()), "2 * margin should be less than camera width!");
     YL_CHECK(2 * border < static_cast<Scalar>(height()), "2 * margin should be less than camera height!");

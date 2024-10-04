@@ -16,7 +16,6 @@ public:
 
     /**
      * @brief 构造函数
-     * @param id 相机id
      * @param label 相机标签
      * @param width 相机宽度（水平像素数）
      * @param height 相机高度（水平像素数）
@@ -28,7 +27,7 @@ public:
                    const projection_t &projection);
 
     /**
-     * @brief 析构函数
+     * @brief 默认析构函数
      */
     ~CameraGeometry() override = default;
 

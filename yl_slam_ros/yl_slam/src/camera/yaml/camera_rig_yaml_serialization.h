@@ -20,7 +20,7 @@ namespace YAML {
  *         用法示例：<br/>
  *         1. 读取（反序列化）：auto rig = YAML::get<CameraRig>(node, "rig");<br/>
  *         2. 写入（序列化）：node["rig"] = rig;<br/>
- *         详细实例可查看CameraRig::loadFromYaml的实现
+ *         详细实例可查看CameraRig::loadFromYaml/writeToYaml的实现
  */
 template<>
 struct convert<CameraRig> {
@@ -46,7 +46,7 @@ struct convert<CameraRig> {
  *         用法示例：<br/>
  *         1. 读取（反序列化）：auto rig = YAML::get<CameraRig::sPtr>(node, "rig");<br/>
  *         2. 写入（序列化）：node["rig"] = rig;<br/>
- *         详细实例可查看CameraRig::loadFromYaml的实现
+ *         详细实例可查看CameraRig::loadFromYaml/writeToYaml的实现
  */
 template<>
 struct convert<CameraRig::sPtr> {

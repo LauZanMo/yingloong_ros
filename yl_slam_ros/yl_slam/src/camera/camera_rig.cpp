@@ -4,13 +4,11 @@
 #include "common/path_helper.h"
 #include "common/yaml/yaml_serialization.h"
 
-#include <absl/strings/str_cat.h>
-
 namespace YL_SLAM {
 
-CameraRig::CameraRig(std::string label, const std::vector<CameraGeometryBase::sPtr> &cameras, TbcVector T_bc_vec)
-    : label_(std::move(label)), cameras_(cameras), T_bc_vec_(std::move(T_bc_vec)) {
-    YL_CHECK(cameras_.size() == T_bc_vec_.size(), "Cameras size should be equal to T_bc_vec size!");
+CameraRig::CameraRig(std::string label, const std::vector<CameraGeometryBase::sPtr> &cameras, TbsVector T_bs_vec)
+    : label_(std::move(label)), cameras_(cameras), T_bs_vec_(std::move(T_bs_vec)) {
+    YL_CHECK(cameras_.size() == T_bs_vec_.size(), "Cameras size should be equal to T_bs_vec size!");
 }
 
 CameraRig::sPtr CameraRig::loadFromYaml(const std::string &config_file) {
@@ -45,9 +43,9 @@ size_t CameraRig::numCameras() const {
     return cameras_.size();
 }
 
-const SE3f &CameraRig::T_bc(size_t idx) const {
-    YL_CHECK(idx < T_bc_vec_.size(), "Index should be less than T_bc_vec size!");
-    return T_bc_vec_[idx];
+const SE3f &CameraRig::T_bs(size_t idx) const {
+    YL_CHECK(idx < T_bs_vec_.size(), "Index should be less than T_bs_vec size!");
+    return T_bs_vec_[idx];
 }
 
 void CameraRig::print(std::ostream &out) const {
@@ -55,7 +53,7 @@ void CameraRig::print(std::ostream &out) const {
     for (size_t i = 0; i < cameras_.size(); ++i) {
         out << "Camera #" << i << std::endl;
         cameras_[i]->print(out);
-        out << "T_bc[" << i << "] = " << YL_MATRIX_FMT(T_bc_vec_[i].matrix()) << std::endl;
+        out << "T_bs[" << i << "] = " << YL_MATRIX_FMT(T_bs_vec_[i].matrix()) << std::endl;
     }
 }
 

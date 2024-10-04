@@ -4,8 +4,6 @@
 #include "common/eigen_types.h"
 #include "common/non_copyable.h"
 
-#include <memory>
-
 namespace YL_SLAM {
 
 /**
@@ -15,16 +13,16 @@ namespace YL_SLAM {
 class CameraRig : NonCopyable {
 public:
     using sPtr      = std::shared_ptr<CameraRig>;
-    using TbcVector = std::vector<SE3f, Eigen::aligned_allocator<SE3f>>;
+    using TbsVector = std::vector<SE3f, Eigen::aligned_allocator<SE3f>>;
 
     /**
      * @brief 构造函数
      * @param label 相机组标签
      * @param cameras 相机组中的所有的相机实例指针
-     * @param T_bc_vec 相机组中每个相机的外参
+     * @param T_bs_vec 相机组中每个相机的外参
      * @warning 输入的相机实例指针和外参向量的长度需要一致
      */
-    CameraRig(std::string label, const std::vector<CameraGeometryBase::sPtr> &cameras, TbcVector T_bc_vec);
+    CameraRig(std::string label, const std::vector<CameraGeometryBase::sPtr> &cameras, TbsVector T_bs_vec);
 
     /**
      * @brief 析构函数
@@ -69,7 +67,7 @@ public:
      * @param idx 相机索引
      * @return 相机外参
      */
-    [[nodiscard]] const SE3f &T_bc(size_t idx) const;
+    [[nodiscard]] const SE3f &T_bs(size_t idx) const;
 
     /**
      * @brief 打印相机组参数
@@ -80,7 +78,7 @@ public:
 private:
     std::string label_;
     std::vector<CameraGeometryBase::sPtr> cameras_;
-    TbcVector T_bc_vec_;
+    TbsVector T_bs_vec_;
 };
 
 } // namespace YL_SLAM
