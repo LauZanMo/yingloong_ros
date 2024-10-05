@@ -27,6 +27,7 @@
     <depend>pcl_ros</depend>
     <depend>rosbag2_transport</depend>
     <depend>yl_msgs</depend>
+    <depend>gtsam</depend>
     <exec_depend>ros2launch</exec_depend>
 
     <!-- 系统依赖 -->
@@ -36,10 +37,6 @@
     <depend>tbb</depend>
     <depend>libopencv-dev</depend>
     <depend>libpcl-all-dev</depend>
-    <depend>libgoogle-glog-dev</depend>
-    <depend>libgflags-dev</depend>
-    <depend>atlas</depend>
-    <depend>suitesparse</depend>
 
     <!-- 导出可执行文件 -->
     <export>

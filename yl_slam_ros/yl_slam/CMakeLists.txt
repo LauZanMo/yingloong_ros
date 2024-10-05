@@ -31,6 +31,7 @@ find_package(Sophus REQUIRED)
 find_package(TBB REQUIRED)
 find_package(OpenCV 4.2.0 REQUIRED)
 find_package(PCL 1.11.0 REQUIRED)
+find_package(GTSAM 4.2.0 EXACT)
 
 target_include_directories(yl_slam PUBLIC
     ${EIGEN3_INCLUDE_DIR}
@@ -47,4 +48,5 @@ target_link_libraries(yl_slam
     TBB::tbb
     ${OpenCV_LIBS}
     ${PCL_LIBRARIES}
+    gtsam
 )

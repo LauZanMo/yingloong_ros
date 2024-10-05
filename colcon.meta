@@ -7,14 +7,11 @@
         },
         "yl_slam_ros": {
             "cmake-args": [
-                "-DCMAKE_BUILD_TYPE=Debug",
-                "-DCMAKE_POLICY_DEFAULT_CMP0144=NEW",
-                "-DCMAKE_POLICY_DEFAULT_CMP0167=NEW"
+                "-DCMAKE_BUILD_TYPE=Debug"
             ],
             "dependencies": [
                 "absl",
-                "sophus",
-                "ceres-solver"
+                "sophus"
             ]
         },
         "absl": {
@@ -30,14 +27,6 @@
                 "-DSOPHUS_USE_BASIC_LOGGING=ON",
                 "-DBUILD_SOPHUS_TESTS=OFF",
                 "-DBUILD_SOPHUS_EXAMPLES=OFF"
-            ]
-        },
-        "ceres-solver": {
-            "cmake-args": [
-                "-DCMAKE_BUILD_TYPE=Release",
-                "-DBUILD_SHARED_LIBS=ON",
-                "-DBUILD_TESTING=OFF",
-                "-DBUILD_EXAMPLES=OFF"
             ]
         }
     }
