@@ -92,6 +92,10 @@ public:
 
         // 若未到达数据集末尾则读取数据包
         while (reader_->has_next()) {
+            if (stop_) {
+                return;
+            }
+
             const auto msg = reader_->read_next();
 
             // 根据话题名进行对应解码
@@ -132,6 +136,10 @@ public:
         }
     }
 
+    void stop() {
+        stop_ = true;
+    }
+
 private:
     /**
      * @brief 同步循环
@@ -152,10 +160,11 @@ private:
                     // 读取缓冲直至数据时间戳大于等于当前时间戳
                     while (true) {
                         point_cloud_buffers_[i].pop(point_cloud);
-                        timestamp = static_cast<int64_t>(point_cloud->header.stamp);
 
                         if (!running_)
                             return;
+
+                        timestamp = static_cast<int64_t>(point_cloud->header.stamp);
 
                         if (timestamp >= ref_timestamp) {
                             break;
@@ -281,12 +290,17 @@ private:
     rclcpp::Serialization<sensor_msgs::msg::Imu> imu_serial_;
 
     std::unique_ptr<std::thread> sync_thread_;
-    std::atomic<bool> running_{false};
+    std::atomic<bool> running_{false}, stop_{false};
     std::vector<conc_queue<RawLidarPointCloud::Ptr>> point_cloud_buffers_;
     std::vector<std::string> lidar_types_;
 
     double play_speed_;
 };
+
+void stopHandler(int sig, DatasetReader &dataset_reader) {
+    std::cout << "Stop by signal " << sig << std::endl;
+    dataset_reader.stop();
+}
 
 int main(int argc, char **argv) {
     // 输入检查
@@ -312,6 +326,14 @@ int main(int argc, char **argv) {
         DrawerBase::sPtr drawer   = std::make_shared<DrawerRviz>(config["drawer"], node);
         auto estimator            = std::make_unique<Estimator>(config, drawer);
         const auto dataset_reader = std::make_unique<DatasetReader>(config["dataset"], std::move(estimator));
+
+        // 设置退出信号
+        std::function<void(int)> handler = [&reader = *dataset_reader](auto &&sig) {
+            stopHandler(std::forward<decltype(sig)>(sig), reader);
+        };
+        std::signal(SIGINT, handler.target<void(int)>());
+        std::signal(SIGTERM, handler.target<void(int)>());
+
         dataset_reader->readLoop();
     }
 
