@@ -12,7 +12,8 @@ Imu::operator bool() const {
 }
 
 std::ostream &operator<<(std::ostream &out, const Imu &imu) {
-    return out << "timestamp: " << imu.timestamp << " gyr: " << imu.gyr.transpose() << " acc: " << imu.acc.transpose();
+    return out << "timestamp: " << imu.timestamp << " gyr: " << YL_MATRIX_FMT(imu.gyr.transpose())
+               << " acc: " << YL_MATRIX_FMT(imu.acc.transpose());
 }
 
 Imu Imu::interpolate(const Imu &imu0, const Imu &imu1, int64_t timestamp) {

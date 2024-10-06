@@ -9,7 +9,6 @@ namespace YL_SLAM {
  * @details 该类用于存储IMU数据，包括时间戳、陀螺仪数据和加速度计数据
  */
 struct Imu {
-
     /**
      * @brief 构造函数
      * @details 构造一个时间戳为-1，值全为0的IMU数据
