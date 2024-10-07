@@ -10,7 +10,7 @@ namespace YL_SLAM {
  * @brief 相机组类
  * @details 相机组类用于管理多个相机实例及其对应的外参
  */
-class CameraRig : NonCopyable {
+class CameraRig : public NonCopyable {
 public:
     using sPtr      = std::shared_ptr<CameraRig>;
     using TbsVector = std::vector<SE3f, Eigen::aligned_allocator<SE3f>>;

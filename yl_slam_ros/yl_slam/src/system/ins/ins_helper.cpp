@@ -4,6 +4,7 @@
 namespace YL_SLAM::ins_helper {
 
 bool detectZeroVelocity(const Imus &imus, FloatType zero_gyr_thresh, FloatType zero_acc_thresh) {
+    YL_CHECK(!imus.empty(), "Imus should not be empty!");
     const auto size_inv = YL_FLOAT(1.0) / YL_FLOAT(imus.size());
 
     // 计算平均值

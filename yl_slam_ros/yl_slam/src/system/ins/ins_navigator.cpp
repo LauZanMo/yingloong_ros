@@ -23,7 +23,7 @@ void InsNavigator::propagate(const Imus &imus) {
         state_.T.so3() *= SO3f::exp(mid_gyr * dt);
         state_.T.normalize();
 
-        Vec3f mid_acc = 0.5 * (q0 * imu0.acc + state_.T.so3() * imu1.acc) + g_w_;
+        Vec3f mid_acc = 0.5 * (q0 * imu0.acc + state_.T.so3() * imu1.acc) - g_w_;
         state_.T.translation() += state_.vel * dt + 0.5 * mid_acc * dt * dt;
         state_.vel += mid_acc * dt;
     }

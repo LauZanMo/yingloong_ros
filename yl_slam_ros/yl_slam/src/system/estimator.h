@@ -69,23 +69,22 @@ private:
 
     /**
      * @brief 同步缓冲区，使缓冲区头部元素时间戳对齐
-     * @details 阻塞地同步缓冲区，使缓冲区头部元素时间戳对齐，若检测到野值或系统关闭，则返回失败
+     * @details 阻塞地同步缓冲区，使缓冲区头部元素时间戳对齐，若系统关闭，则返回失败
      * @return 是否成功同步缓冲区
      */
     bool syncBuffer();
 
     /**
      * @brief 从缓冲区中获取测量值
-     * @details 阻塞地从缓冲区分别获取当前帧束及其时间戳之前的IMU，若检测到野值或系统关闭，则返回失败
-     * @param imus 上一帧束到当前帧束间所有的IMU
+     * @details 阻塞地从缓冲区分别获取当前帧束及其时间戳之前的IMU，若系统关闭，则返回失败
      * @return 是否成功获取测量值
-     * @note 获取的帧束可在cur_frame_bundle_中获取
+     * @note 更新的帧束可在cur_frame_bundle_中获取，IMU可在cur_imus_中获取
      */
-    bool getMeasurementFromBuffer(Imus &imus);
+    bool getMeasurementFromBuffer();
 
     /**
      * @brief 从缓冲区中获取指定时间戳之前的IMU
-     * @details 阻塞地从缓冲区获取指定时间戳之前的IMU，若检测到野值或系统关闭，则返回失败
+     * @details 阻塞地从缓冲区获取指定时间戳之前的IMU，若系统关闭，则返回失败
      * @param timestamp 时间戳
      * @param imus 时间戳之前的IMU
      * @return 是否成功获取IMU
@@ -107,6 +106,7 @@ private:
     conc_queue<FrameBundle::sPtr> frame_bundle_buffer_;         ///< 帧束缓冲区
     conc_queue<Imu, Eigen::aligned_allocator<Imu>> imu_buffer_; ///< IMU缓冲区
     FrameBundle::sPtr cur_frame_bundle_, last_frame_bundle_;    ///< 当前帧束和上一帧束
+    Imus cur_imus_;                                             ///< 上一帧束到当前帧束间所有的IMU
     Imu last_imu_;                                              ///< 上一IMU
 
     // 计时器

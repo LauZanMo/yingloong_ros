@@ -86,13 +86,12 @@ void Estimator::estimateLoop() {
     // 估计循环
     while (true) {
         // 从缓冲区中获取测量值
-        Imus imus;
-        if (!getMeasurementFromBuffer(imus)) {
+        if (!getMeasurementFromBuffer()) {
             return;
         }
 
         YL_INFO("Frame bundle timestamp: {}ns", cur_frame_bundle_->timestamp());
-        YL_INFO("IMU timestamp range: {}ns - {}ns", imus.front().timestamp, imus.back().timestamp);
+        YL_INFO("IMU timestamp range: {}ns - {}ns", cur_imus_.front().timestamp, cur_imus_.back().timestamp);
 
         // 检查是否需要重置，重置后需要同步缓冲区
         if (reset_) {
@@ -141,7 +140,7 @@ bool Estimator::syncBuffer() {
     return getImusFromBuffer(cur_frame_bundle_->timestamp(), imus);
 }
 
-bool Estimator::getMeasurementFromBuffer(Imus &imus) {
+bool Estimator::getMeasurementFromBuffer() {
     // 保存上一帧束，并从图像缓冲区中取出新帧束
     last_frame_bundle_ = cur_frame_bundle_;
     frame_bundle_buffer_.pop(cur_frame_bundle_);
@@ -150,12 +149,13 @@ bool Estimator::getMeasurementFromBuffer(Imus &imus) {
     }
 
     // 从缓冲区中获取当前帧束之前的IMU
-    return getImusFromBuffer(cur_frame_bundle_->timestamp(), imus);
+    return getImusFromBuffer(cur_frame_bundle_->timestamp(), cur_imus_);
 }
 
 bool Estimator::getImusFromBuffer(int64_t timestamp, Imus &imus) {
     // 将上一个IMU加入容器
     YL_CHECK(last_imu_, "Last IMU should be initialized!");
+    imus.clear();
     imus.push_back(last_imu_);
 
     // 从IMU缓冲区中取出timestamp之前的IMU
