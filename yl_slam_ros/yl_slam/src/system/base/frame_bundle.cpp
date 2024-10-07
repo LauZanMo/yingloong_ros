@@ -21,14 +21,36 @@ long FrameBundle::bundleId() const {
     return bundle_id_;
 }
 
+const NavState &FrameBundle::state() const {
+    YL_CHECK(state_, "State should be initialized before access!");
+    return state_;
+}
+
+void FrameBundle::setState(const NavState &state) {
+    YL_CHECK(!state_ || timestamp() == state.timestamp,
+             "State timestamp should be equal to the frame bundle timestamp!");
+    state_ = state;
+    for (const auto &frame: frames_) {
+        frame->setTwf(state_.T * frame->Tbs());
+    }
+}
+
 const SE3f &FrameBundle::Twb() const {
-    return T_wb_;
+    YL_CHECK(state_, "State should be initialized before access!");
+    return state_.T;
 }
 
 void FrameBundle::setTwb(const SE3f &T_wb) {
-    T_wb_ = T_wb;
+    state_.T = T_wb;
     for (const auto &frame: frames_) {
         frame->setTwf(T_wb * frame->Tbs());
+    }
+}
+
+void FrameBundle::setTbs(const std::vector<SE3f> &T_bs_vec) {
+    YL_CHECK(T_bs_vec.size() == frames_.size(), "T_bs_vec size should be equal to the number of frames!");
+    for (size_t i = 0; i < T_bs_vec.size(); ++i) {
+        frames_[i]->setTbs(T_bs_vec[i]);
     }
 }
 

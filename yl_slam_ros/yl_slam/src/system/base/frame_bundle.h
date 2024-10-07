@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/nav_state.h"
 #include "system/base/frame.h"
 
 namespace YL_SLAM {
@@ -37,6 +38,18 @@ public:
     [[nodiscard]] long bundleId() const;
 
     /**
+     * @brief 获取世界坐标系下body坐标系（通常是IMU）的导航状态
+     * @return 世界坐标系下body坐标系（通常是IMU）的导航状态
+     */
+    [[nodiscard]] const NavState &state() const;
+
+    /**
+     * @brief 设置世界坐标系下body坐标系（通常是IMU）的导航状态
+     * @param state 世界坐标系下body坐标系（通常是IMU）的导航状态
+     */
+    void setState(const NavState &state);
+
+    /**
      * @brief 获取世界坐标系到body坐标系（通常是IMU）的变换
      * @return 世界坐标系到body坐标系（通常是IMU）的变换
      */
@@ -47,6 +60,12 @@ public:
      * @param T_wb 世界坐标系到body坐标系（通常是IMU）的变换
      */
     void setTwb(const SE3f &T_wb);
+
+    /**
+     * @brief 设置帧束中各帧的外参
+     * @param T_bs_vec 帧束中各帧的外参
+     */
+    void setTbs(const std::vector<SE3f> &T_bs_vec);
 
     /**
      * @brief 获取帧束中帧的数量
@@ -70,7 +89,7 @@ public:
 
 private:
     long bundle_id_;                  ///< 帧束id（历史唯一）
-    SE3f T_wb_;                       ///< 世界坐标系到body坐标系（通常是IMU）的变换
+    NavState state_;                  ///< 世界坐标系下的导航状态
     std::vector<Frame::sPtr> frames_; ///< 帧束中所有帧的指针（帧的时间戳相同）
 };
 
