@@ -9,11 +9,13 @@ drawer:
     # 话题
     topic:
         raw_images:
-            - "/yl_slam/cam0/image_raw"
-            - "/yl_slam/cam1/image_raw"
+            - "cam0/image_raw"
+            - "cam1/image_raw"
         raw_point_clouds:
-            - "/yl_slam/lidar0/point_cloud_raw"
-        raw_imu: "/yl_slam/imu0/data"
+            - "lidar0/point_cloud_raw"
+        raw_imu: "imu0/data"
+        ref_pose: "ref_pose"
+        current_nav_state: "current_nav_state"
     # 坐标系id
     frame_id:
         cameras:
@@ -25,7 +27,17 @@ drawer:
         map: "map"
         ground_truth: "gt"
 
+acc_in_g: true # 加速度是否以g为单位
+gravity_mag: 9.81 # 重力向量模长（m/s²）
+
 lidar_rig_file: "config/calibration/f400.yaml" # 雷达配置文件（支持相对yl_slam的路径）
+
+initializer:
+    type: static # 静态初始化器
+    parameters:
+        rows: 3
+        cols: 1
+        data: [ 2.0, 0.006, 0.2 ] # 参数顺序 [初始化周期、陀螺仪零速阈值、加速度零速阈值]
 
 estimator:
     image_align_max_level: 3 # 图像对齐最大金字塔层数

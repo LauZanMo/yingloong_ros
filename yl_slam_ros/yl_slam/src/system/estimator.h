@@ -6,8 +6,16 @@
 #include "lidar/lidar_rig.h"
 #include "system/base/map_server.h"
 #include "system/drawer_base.h"
+#include "system/init/initializer_base.h"
+#include "system/ins/ins_navigator.h"
 
 namespace YL_SLAM {
+
+enum class EstimatorStatus {
+    INITIALIZING = 0,
+    ESTIMATING   = 1,
+    LOST         = 2
+};
 
 /**
  * @brief 估计器类
@@ -92,9 +100,13 @@ private:
     bool getImusFromBuffer(int64_t timestamp, Imus &imus);
 
     // 系统
-    LidarRig::sPtr lidar_rig_;   ///< 激光雷达组
-    MapServer::sPtr map_server_; ///< 地图服务器
-    DrawerBase::sPtr drawer_;    ///< 绘制器
+    LidarRig::sPtr lidar_rig_;          ///< 激光雷达组
+    MapServer::sPtr map_server_;        ///< 地图服务器
+    DrawerBase::sPtr drawer_;           ///< 绘制器
+    InitializerBase::uPtr initializer_; ///< 初始化器
+    InsNavigator::uPtr ins_navigator_;  ///< 惯性导航器
+
+    EstimatorStatus status_{EstimatorStatus::INITIALIZING}; ///< 估计器状态
 
     // 多线程
     std::atomic<bool> running_{false};             ///< 运行标志位
@@ -111,6 +123,10 @@ private:
 
     // 计时器
     YL_DECLARE_TIMER(deskew_timer_);
+
+    // 参数
+    bool acc_in_g_;         ///< 加速度是否以g为单位
+    FloatType gravity_mag_; ///< 重力向量模长
 };
 
 } // namespace YL_SLAM

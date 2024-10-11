@@ -1,15 +1,17 @@
 #include "system/estimator.h"
-#include "common/yaml/yaml_serialization.h"
-
-#include <absl/strings/str_cat.h>
-#include <iostream>
+#include "common/yaml/yaml_eigen_serialization.h"
 
 namespace YL_SLAM {
 
 Estimator::Estimator(const YAML::Node &config, DrawerBase::sPtr drawer) : drawer_(std::move(drawer)) {
     YL_INFO("Starting estimator...");
 
-    // 读取相机文件路径，并初始化相机组
+    // 重力相关参数
+    acc_in_g_    = YAML::get<bool>(config, "acc_in_g");
+    gravity_mag_ = YAML::get<FloatType>(config, "gravity_mag");
+    Vec3f g_w(0.0, 0.0, -gravity_mag_);
+
+    // 读取雷达文件路径，并初始化雷达组
     const auto lidar_rig_file = YAML::get<std::string>(config, "lidar_rig_file");
     lidar_rig_                = LidarRig::loadFromYaml(lidar_rig_file);
     lidar_rig_->print(std::cout);
@@ -17,6 +19,12 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::sPtr drawer) : drawer
     // 初始化地图服务器
     map_server_ = std::make_shared<MapServer>(config["map"]);
     drawer_->setMapServer(map_server_);
+
+    // 加载初始化器
+    initializer_ = InitializerBase::loadFromYaml(config["initializer"], g_w);
+
+    // 初始化惯性导航器
+    ins_navigator_ = std::make_unique<InsNavigator>(g_w);
 
     // 读取估计器配置
     const auto estimator_config = config["estimator"];
@@ -70,10 +78,16 @@ void Estimator::addPointCloudBundle(int64_t timestamp, const std::vector<RawLida
 }
 
 void Estimator::addImu(const Imu &imu) {
+    // 若加速度计输出单位为g，则转换为m/s2
+    Imu input(imu);
+    if (acc_in_g_) {
+        input.acc *= gravity_mag_;
+    }
+
     // 将IMU加入缓冲区
     if (!reset_) {
         spin_rwlock_t lock(reset_mutex_, false);
-        imu_buffer_.push(imu);
+        imu_buffer_.push(std::move(input));
         drawer_->updateRawImu(imu.timestamp, imu);
     }
 }
@@ -88,6 +102,16 @@ void Estimator::estimateLoop() {
         // 从缓冲区中获取测量值
         if (!getMeasurementFromBuffer()) {
             return;
+        }
+
+        if (status_ == EstimatorStatus::INITIALIZING) {
+            if (initializer_->initialize(cur_frame_bundle_, cur_imus_)) {
+                ins_navigator_->update(cur_frame_bundle_->state());
+                status_ = EstimatorStatus::ESTIMATING;
+            }
+        } else if (status_ == EstimatorStatus::ESTIMATING) {
+            const auto state = ins_navigator_->propagate(cur_imus_);
+            drawer_->updateCurrentNavState(state.timestamp, state);
         }
 
         YL_INFO("Frame bundle timestamp: {}ns", cur_frame_bundle_->timestamp());

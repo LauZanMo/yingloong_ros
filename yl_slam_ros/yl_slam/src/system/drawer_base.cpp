@@ -61,6 +61,14 @@ void DrawerBase::updateRefPose(int64_t timestamp, const SE3f &pose) {
     }
 }
 
+void DrawerBase::updateCurrentNavState(int64_t timestamp, const NavState &state) {
+    if (!reset_) {
+        draw_task_buffer_.push([this, timestamp, state]() {
+            drawCurrentNavState(timestamp, state);
+        });
+    }
+}
+
 void DrawerBase::drawLoop() {
     while (true) {
         // 从缓冲区获取任务

@@ -4,6 +4,8 @@
 #include "common/nav_state.h"
 #include "common/sensor/imu.h"
 
+#include <memory>
+
 namespace YL_SLAM {
 
 /**
@@ -11,6 +13,8 @@ namespace YL_SLAM {
  */
 class InsNavigator {
 public:
+    using uPtr = std::unique_ptr<InsNavigator>;
+
     /**
      * @brief 构造函数
      * @param g_w 世界坐标系下的重力向量
@@ -25,8 +29,9 @@ public:
     /**
      * @brief 积分递推（机械编排）
      * @param imus IMU数据容器
+     * @return 当前导航状态
      */
-    void propagate(const Imus &imus);
+    NavState propagate(const Imus &imus);
 
     /**
      * @brief 获取当前导航状态

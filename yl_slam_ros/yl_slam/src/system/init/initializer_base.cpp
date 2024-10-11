@@ -13,8 +13,7 @@ InitializerBase::uPtr InitializerBase::loadFromYaml(const YAML::Node &config, co
     } else if (type == "dynamic") {
         return std::make_unique<DynamicInitializer>(parameters, g_w);
     } else {
-        YL_ERROR("Invalid initializer type: {}", type);
-        return {};
+        YL_FATAL("Invalid initializer type: {}", type);
     }
 }
 

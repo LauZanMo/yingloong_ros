@@ -7,7 +7,7 @@ namespace YL_SLAM {
 
 InsNavigator::InsNavigator(Vec3f g_w) : g_w_(std::move(g_w)) {}
 
-void InsNavigator::propagate(const Imus &imus) {
+NavState InsNavigator::propagate(const Imus &imus) {
     YL_CHECK(state_, "State should be initialized first!");
     YL_CHECK(imus.size() > 1, "Input IMUs size should be greater than 1!");
     YL_CHECK(state_.timestamp == imus[0].timestamp,
@@ -27,13 +27,18 @@ void InsNavigator::propagate(const Imus &imus) {
         state_.T.translation() += state_.vel * dt + 0.5 * mid_acc * dt * dt;
         state_.vel += mid_acc * dt;
     }
+    state_.timestamp = imus.back().timestamp;
+
+    return state_;
 }
 
 const NavState &InsNavigator::state() const {
+    YL_CHECK(state_, "State should be initialized before access!");
     return state_;
 }
 
 const SE3f &InsNavigator::Twb() const {
+    YL_CHECK(state_, "State should be initialized before access!");
     return state_.T;
 }
 

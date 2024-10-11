@@ -316,7 +316,7 @@ int main(int argc, char **argv) {
 
     // 启动ROS节点
     rclcpp::init(argc, argv);
-    rclcpp::Node node(program_name);
+    rclcpp::Node node(program_name, program_name);
 
     // 加载配置
     const std::string file_name(path_helper::completePath(argv[1]));

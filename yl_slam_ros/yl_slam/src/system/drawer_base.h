@@ -69,6 +69,13 @@ public:
      */
     void updateRefPose(int64_t timestamp, const SE3f &pose);
 
+    /**
+     * @brief 更新当前导航状态
+     * @param timestamp 当前导航状态时间戳
+     * @param state 当前导航状态
+     */
+    void updateCurrentNavState(int64_t timestamp, const NavState &state);
+
 protected:
     /**
      * @brief 绘制原始图像束
@@ -97,6 +104,13 @@ protected:
      * @param pose 参考真值位姿
      */
     virtual void drawRefPose(int64_t timestamp, const SE3f &pose) = 0;
+
+    /**
+     * @brief 绘制当前导航状态
+     * @param timestamp 当前导航状态时间戳
+     * @param state 当前导航状态
+     */
+    virtual void drawCurrentNavState(int64_t timestamp, const NavState &state) = 0;
 
     MapServer::sPtr map_server_;
 

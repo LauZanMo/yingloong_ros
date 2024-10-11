@@ -25,8 +25,8 @@ bool detectZeroVelocity(const Imus &imus, FloatType zero_gyr_thresh, FloatType z
     std_gyr = (std_gyr * size_inv).cwiseSqrt();
     std_acc = (std_acc * size_inv).cwiseSqrt();
 
-    YL_TRACE("Zero velocity detector: \n  Gyroscope std: {} \n  Accelerator std: {}",
-             YL_MATRIX_FMT(std_gyr.transpose()), YL_MATRIX_FMT(std_acc.transpose()));
+    YL_TRACE("Zero velocity detector:\n Gyroscope std: {}\n Accelerator std: {}", YL_MATRIX_FMT(std_gyr.transpose()),
+             YL_MATRIX_FMT(std_acc.transpose()));
 
     return (std_gyr.array() < zero_gyr_thresh).all() && (std_acc.array() < zero_acc_thresh).all();
 }

@@ -3,6 +3,8 @@
 #include "system/drawer_base.h"
 
 #include <cv_bridge/cv_bridge.h>
+#include <geometry_msgs/msg/transform_stamped.h>
+#include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/imu.hpp>
@@ -49,9 +51,19 @@ private:
      */
     void drawRefPose(int64_t timestamp, const SE3f &pose) override;
 
+    /**
+     * @brief 绘制当前导航状态
+     * @param timestamp 当前导航状态时间戳
+     * @param state 当前导航状态
+     */
+    void drawCurrentNavState(int64_t timestamp, const NavState &state) override;
+
+private:
     std::vector<rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr> raw_image_pubs_;
     std::vector<rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> raw_point_cloud_pubs_;
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr raw_imu_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::TransformStamped>::SharedPtr ref_pose_pub_;
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr current_nav_state_pub_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
     std::vector<cv_bridge::CvImage> cv_images_;

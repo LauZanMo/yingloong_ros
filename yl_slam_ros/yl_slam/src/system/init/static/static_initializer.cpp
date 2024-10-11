@@ -1,5 +1,6 @@
 #include "system/init/static/static_initializer.h"
 #include "common/logger.h"
+#include "common/rotation_helper.h"
 #include "system/ins/ins_helper.h"
 
 namespace YL_SLAM {
@@ -39,12 +40,19 @@ bool StaticInitializer::initialize(const FrameBundle::sPtr &bundle, const Imus &
         ave_gyr *= size_inv;
         ave_acc *= size_inv;
 
+        // 重力调平
+        Vec3f att;
+        att[0] = YL_FLOAT(atan2(-ave_acc[1], -ave_acc[2]));
+        att[1] = YL_FLOAT(atan(ave_acc[0] / sqrt(ave_acc[1] * ave_acc[1] + ave_acc[2] * ave_acc[2])));
+        att[2] = 0.0;
+
         // 构建初始状态
-        const auto q_wb = Quatf::FromTwoVectors(ave_acc, g_w_);
+        const auto q_wb = rotation_helper::toSO3(att);
         NavState state(imus_.back().timestamp, {q_wb, Vec3f ::Zero()}, Vec3f::Zero(), ave_gyr,
                        ave_acc - q_wb.inverse() * g_w_);
         bundle->setState(state);
         initialized_ = true;
+        YL_INFO("Static initialize done! State: {}", state);
     }
 
     return true;
@@ -56,9 +64,8 @@ void StaticInitializer::reset() {
 }
 
 void StaticInitializer::print(std::ostream &out) const {
-    out << "Static initializer:" << std::endl
-        << "  [zero_gyr_thresh, zero_acc_thresh] = [" << zero_gyr_thresh_ << ", " << zero_acc_thresh_ << "]"
-        << std::endl
+    out << "Static initializer:\n"
+        << "  [zero_gyr_thresh, zero_acc_thresh] = [" << zero_gyr_thresh_ << ", " << zero_acc_thresh_ << "]\n"
         << "  init_period = " << init_period_ << std::endl;
 }
 
