@@ -36,10 +36,14 @@ T get(const YAML::Node &node, const std::string &key) {
 
     // 获取子节点，若键为空则子节点即为当前节点
     Node sub_node;
-    if (key.empty())
-        sub_node = node;
-    else
-        sub_node = node[key];
+    try {
+        if (key.empty())
+            sub_node = node;
+        else
+            sub_node = node[key];
+    } catch (const YAML::Exception &e) {
+        YL_FATAL("Error getting key \"{}\"!", key);
+    }
 
     if (sub_node) {
         try {

@@ -13,9 +13,9 @@ NavState::operator bool() const {
 }
 
 std::ostream &operator<<(std::ostream &out, const NavState &state) {
-    return out << "timestamp: " << state.timestamp << " T: " << YL_MATRIX_FMT(state.T.params().transpose())
-               << " vel: " << YL_MATRIX_FMT(state.vel.transpose()) << " bg: " << YL_MATRIX_FMT(state.bg.transpose())
-               << " ba: " << YL_MATRIX_FMT(state.ba.transpose());
+    return out << "\ntimestamp: " << state.timestamp << "\nT: " << YL_MATRIX_FMT(state.T.params().transpose())
+               << "\nvel: " << YL_MATRIX_FMT(state.vel.transpose()) << "\nbg: " << YL_MATRIX_FMT(state.bg.transpose())
+               << "\nba: " << YL_MATRIX_FMT(state.ba.transpose());
 }
 
 } // namespace YL_SLAM
