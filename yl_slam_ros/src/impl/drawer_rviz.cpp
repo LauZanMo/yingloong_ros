@@ -116,10 +116,10 @@ void DrawerRviz::drawRefPose(int64_t timestamp, const SE3f &pose) {
     msg.transform.translation.x = pose.translation()[0];
     msg.transform.translation.y = pose.translation()[1];
     msg.transform.translation.z = pose.translation()[2];
-    msg.transform.rotation.x    = pose.so3().unit_quaternion().x();
-    msg.transform.rotation.y    = pose.so3().unit_quaternion().y();
-    msg.transform.rotation.z    = pose.so3().unit_quaternion().z();
-    msg.transform.rotation.w    = pose.so3().unit_quaternion().w();
+    msg.transform.rotation.x    = pose.unit_quaternion().x();
+    msg.transform.rotation.y    = pose.unit_quaternion().y();
+    msg.transform.rotation.z    = pose.unit_quaternion().z();
+    msg.transform.rotation.w    = pose.unit_quaternion().w();
     if (raw_imu_pub_->get_subscription_count() != 0) {
         ref_pose_pub_->publish(msg);
     }
@@ -135,10 +135,10 @@ void DrawerRviz::drawCurrentNavState(int64_t timestamp, const NavState &state) {
         odom_msg.pose.pose.position.x    = state.T.translation()[0];
         odom_msg.pose.pose.position.y    = state.T.translation()[1];
         odom_msg.pose.pose.position.z    = state.T.translation()[2];
-        odom_msg.pose.pose.orientation.x = state.T.so3().unit_quaternion().x();
-        odom_msg.pose.pose.orientation.y = state.T.so3().unit_quaternion().y();
-        odom_msg.pose.pose.orientation.z = state.T.so3().unit_quaternion().z();
-        odom_msg.pose.pose.orientation.w = state.T.so3().unit_quaternion().w();
+        odom_msg.pose.pose.orientation.x = state.T.unit_quaternion().x();
+        odom_msg.pose.pose.orientation.y = state.T.unit_quaternion().y();
+        odom_msg.pose.pose.orientation.z = state.T.unit_quaternion().z();
+        odom_msg.pose.pose.orientation.w = state.T.unit_quaternion().w();
         odom_msg.twist.twist.linear.x    = state.vel[0];
         odom_msg.twist.twist.linear.y    = state.vel[1];
         odom_msg.twist.twist.linear.z    = state.vel[2];
@@ -152,10 +152,10 @@ void DrawerRviz::drawCurrentNavState(int64_t timestamp, const NavState &state) {
     trans_msg.transform.translation.x = state.T.translation()[0];
     trans_msg.transform.translation.y = state.T.translation()[1];
     trans_msg.transform.translation.z = state.T.translation()[2];
-    trans_msg.transform.rotation.x    = state.T.so3().unit_quaternion().x();
-    trans_msg.transform.rotation.y    = state.T.so3().unit_quaternion().y();
-    trans_msg.transform.rotation.z    = state.T.so3().unit_quaternion().z();
-    trans_msg.transform.rotation.w    = state.T.so3().unit_quaternion().w();
+    trans_msg.transform.rotation.x    = state.T.unit_quaternion().x();
+    trans_msg.transform.rotation.y    = state.T.unit_quaternion().y();
+    trans_msg.transform.rotation.z    = state.T.unit_quaternion().z();
+    trans_msg.transform.rotation.w    = state.T.unit_quaternion().w();
     tf_broadcaster_->sendTransform(trans_msg);
 }
 
