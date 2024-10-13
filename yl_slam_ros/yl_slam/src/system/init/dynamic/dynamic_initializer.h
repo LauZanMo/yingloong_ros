@@ -36,6 +36,18 @@ public:
      */
     void print(std::ostream &out) const override;
 
+    /**
+     * @brief 获取初始化器类型
+     * @return 初始化器类型
+     */
+    [[nodiscard]] std::string type() const override;
+
+    /**
+     * @brief 获取初始化器参数
+     * @return 初始化器参数
+     */
+    [[nodiscard]] VecXf parameters() const override;
+
 private:
     Vec3f g_w_; ///< 世界坐标系下的重力向量
 };

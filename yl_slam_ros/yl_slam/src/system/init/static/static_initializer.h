@@ -39,6 +39,18 @@ public:
      */
     void print(std::ostream &out) const override;
 
+    /**
+     * @brief 获取初始化器类型
+     * @return 初始化器类型
+     */
+    [[nodiscard]] std::string type() const override;
+
+    /**
+     * @brief 获取初始化器参数
+     * @return 初始化器参数
+     */
+    [[nodiscard]] VecXf parameters() const override;
+
 private:
     Imus imus_; ///< 用于初始化的IMU数据容器
 

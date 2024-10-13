@@ -26,13 +26,18 @@ public:
     virtual ~InitializerBase() = default;
 
     /**
-     * @brief 从YAML配置文件中加载初始化器
+     * @brief 从YAML节点中加载初始化器
      * @param config YAML节点
      * @param g_w 世界坐标系下的重力向量
-     * @return 加载初始化器的指针
-     * @warning 如果加载失败，则返回空指针
+     * @return 所加载的初始化器指针
      */
     static uPtr loadFromYaml(const YAML::Node &config, const Vec3f &g_w);
+
+    /**
+     * @brief 将初始化器参数写入YAML节点
+     * @return YAML节点
+     */
+    [[nodiscard]] YAML::Node writeToYaml() const;
 
     /**
      * @brief 进行初始化接口
@@ -58,6 +63,18 @@ public:
      * @param out 输出流实例
      */
     virtual void print(std::ostream &out) const = 0;
+
+    /**
+     * @brief 获取初始化器类型
+     * @return 初始化器类型
+     */
+    [[nodiscard]] virtual std::string type() const = 0;
+
+    /**
+     * @brief 获取初始化器参数
+     * @return 初始化器参数
+     */
+    [[nodiscard]] virtual VecXf parameters() const = 0;
 
 protected:
     bool initialized_{false}; ///< 初始化标志位

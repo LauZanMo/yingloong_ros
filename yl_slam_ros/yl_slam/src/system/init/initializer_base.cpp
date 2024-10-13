@@ -17,6 +17,13 @@ InitializerBase::uPtr InitializerBase::loadFromYaml(const YAML::Node &config, co
     }
 }
 
+YAML::Node InitializerBase::writeToYaml() const {
+    YAML::Node node;
+    node["type"]       = type();
+    node["parameters"] = parameters();
+    return node;
+}
+
 bool InitializerBase::isInitialized() const {
     return initialized_;
 }

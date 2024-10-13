@@ -69,4 +69,16 @@ void StaticInitializer::print(std::ostream &out) const {
         << "  init_period = " << init_period_ << std::endl;
 }
 
+std::string StaticInitializer::type() const {
+    return "static";
+}
+
+VecXf StaticInitializer::parameters() const {
+    VecXf parameters(3);
+    parameters[0] = YL_FLOAT(static_cast<double>(init_period_) * 1e-9);
+    parameters[1] = zero_gyr_thresh_;
+    parameters[2] = zero_acc_thresh_;
+    return parameters;
+}
+
 } // namespace YL_SLAM

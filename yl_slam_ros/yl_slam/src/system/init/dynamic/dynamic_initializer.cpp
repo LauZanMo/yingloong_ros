@@ -17,4 +17,12 @@ void DynamicInitializer::print(std::ostream &out) const {
     out << "Dynamic initializer: Not implement yet!" << std::endl;
 }
 
+std::string DynamicInitializer::type() const {
+    return "dynamic";
+}
+
+VecXf DynamicInitializer::parameters() const {
+    return {};
+}
+
 } // namespace YL_SLAM
