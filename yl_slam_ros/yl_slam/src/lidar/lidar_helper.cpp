@@ -1,8 +1,6 @@
 #include "lidar/lidar_helper.h"
 
-#define PCL_NO_PRECOMPILE
 #include <pcl/filters/filter.h>
-#undef PCL_NO_PRECOMPILE
 
 namespace YL_SLAM::lidar_helper {
 

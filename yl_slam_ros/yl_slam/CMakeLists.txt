@@ -50,3 +50,6 @@ target_link_libraries(yl_slam
     ${PCL_LIBRARIES}
     gtsam
 )
+target_compile_definitions(yl_slam PUBLIC
+    PCL_NO_PRECOMPILE
+)
