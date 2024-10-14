@@ -1,9 +1,14 @@
 dataset:
     # 数据集完整路径（ros2 bag形式，支持相对yl_slam的路径）
-    uri: "/home/ubuntu/dataset/yingloong/home/home_test2"
-    play_speed: 4.0 # 播放倍速（1.0为原速）
+    uri: "/home/star/dataset/yingloong/home/home_test2"
+    play_speed: 1.0 # 播放倍速（1.0为原速）
     slam_sensor_rate: 10 # SLAM传感器帧率（Hz）
     cache_duration: 5 # 缓冲区窗口时长（s）
+
+acc_in_g: true # 加速度是否以g为单位
+gravity_mag: 9.81 # 重力向量模长（m/s²）
+
+lidar_rig_file: "config/calibration/f400.yaml" # 雷达配置文件（支持相对yl_slam的路径）
 
 drawer:
     # 话题
@@ -27,17 +32,27 @@ drawer:
         map: "map"
         ground_truth: "gt"
 
-acc_in_g: true # 加速度是否以g为单位
-gravity_mag: 9.81 # 重力向量模长（m/s²）
-
-lidar_rig_file: "config/calibration/f400.yaml" # 雷达配置文件（支持相对yl_slam的路径）
-
 initializer:
-    type: static # 静态初始化器
+    type: "static" # 静态初始化器
     parameters:
         rows: 3
         cols: 1
         data: [ 2.0, 0.006, 0.2 ] # 参数顺序 [初始化周期、陀螺仪零速阈值、加速度零速阈值]
+
+preprocessor:
+    filters:
+        -   filter:
+                type: "body"
+                parameters:
+                    rows: 1
+                    cols: 1
+                    data: [ 0.5 ]
+        -   filter:
+                type: "voxel"
+                parameters:
+                    rows: 1
+                    cols: 1
+                    data: [ 0.05 ]
 
 estimator:
     image_align_max_level: 3 # 图像对齐最大金字塔层数

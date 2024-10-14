@@ -66,7 +66,7 @@ void StaticInitializer::reset() {
 void StaticInitializer::print(std::ostream &out) const {
     out << "Static initializer:\n"
         << "  [zero_gyr_thresh, zero_acc_thresh] = [" << zero_gyr_thresh_ << ", " << zero_acc_thresh_ << "]\n"
-        << "  init_period = " << init_period_ << std::endl;
+        << "  init_period = " << static_cast<double>(init_period_) * 1e-9 << std::endl;
 }
 
 std::string StaticInitializer::type() const {

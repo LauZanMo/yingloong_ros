@@ -22,9 +22,14 @@ Estimator::Estimator(const YAML::Node &config, DrawerBase::sPtr drawer) : drawer
 
     // 加载初始化器
     initializer_ = InitializerBase::loadFromYaml(config["initializer"], g_w);
+    initializer_->print(std::cout);
 
     // 初始化惯性导航器
     ins_navigator_ = std::make_unique<InsNavigator>(g_w);
+
+    // 加载点云预处理器
+    pcl_preprocessor_ = PclPreprocessor::loadFromYaml(config["preprocessor"]);
+    pcl_preprocessor_->print(std::cout);
 
     // 读取估计器配置
     const auto estimator_config = config["estimator"];
@@ -65,8 +70,11 @@ void Estimator::addPointCloudBundle(int64_t timestamp, const std::vector<RawLida
     YL_CHECK(point_clouds.size() == lidar_rig_->numLidars(),
              "The number of raw point clouds should match the number of lidars!");
     std::vector<Frame::sPtr> frames(point_clouds.size());
+    // TODO: 检查并行加速
+    // 预处理并生成雷达帧
     for (size_t i = 0; i < point_clouds.size(); ++i) {
-        frames[i] = std::make_shared<Frame>(timestamp, lidar_rig_->lidar(i), lidar_rig_->T_bs(i), point_clouds[i]);
+        const auto point_cloud = pcl_preprocessor_->process(*point_clouds[i]);
+        frames[i] = std::make_shared<Frame>(timestamp, lidar_rig_->lidar(i), lidar_rig_->T_bs(i), point_cloud);
     }
 
     // 将帧束加入缓冲区

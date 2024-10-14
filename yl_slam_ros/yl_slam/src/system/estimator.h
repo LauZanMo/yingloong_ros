@@ -8,6 +8,7 @@
 #include "system/drawer_base.h"
 #include "system/init/initializer_base.h"
 #include "system/ins/ins_navigator.h"
+#include "system/pcl/pcl_preprocessor.h"
 
 namespace YL_SLAM {
 
@@ -100,11 +101,12 @@ private:
     bool getImusFromBuffer(int64_t timestamp, Imus &imus);
 
     // 系统
-    LidarRig::sPtr lidar_rig_;          ///< 激光雷达组
-    MapServer::sPtr map_server_;        ///< 地图服务器
-    DrawerBase::sPtr drawer_;           ///< 绘制器
-    InitializerBase::uPtr initializer_; ///< 初始化器
-    InsNavigator::uPtr ins_navigator_;  ///< 惯性导航器
+    LidarRig::sPtr lidar_rig_;               ///< 激光雷达组
+    MapServer::sPtr map_server_;             ///< 地图服务器
+    DrawerBase::sPtr drawer_;                ///< 绘制器
+    InitializerBase::uPtr initializer_;      ///< 初始化器
+    InsNavigator::uPtr ins_navigator_;       ///< 惯性导航器
+    PclPreprocessor::uPtr pcl_preprocessor_; ///< 点云预处理器
 
     EstimatorStatus status_{EstimatorStatus::INITIALIZING}; ///< 估计器状态
 
